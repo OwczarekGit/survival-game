@@ -1,16 +1,24 @@
 use bevy::prelude::*;
+use bevy_rapier2d::prelude::*;
 
 use crate::{
     asset_loader_plugin::AssetLoader,
-    components::{Health, Player, Velocity},
+    components::{Bullet, Damage, Enemy, Health, IFrames, LifeTime, Player, Velocity},
 };
+
+#[derive(Debug, Resource)]
+pub struct PlayerAttackTimer(Timer);
 
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, spawn_player);
-        app.add_systems(Update, move_player);
+        app.insert_resource(PlayerAttackTimer(Timer::from_seconds(
+            0.5,
+            TimerMode::Repeating,
+        )));
+        app.add_systems(Update, (move_player, shoot_bullets));
     }
 }
 
@@ -20,6 +28,7 @@ fn spawn_player(mut cmd: Commands, asset_server: Res<AssetLoader>) {
     cmd.spawn((
         Player,
         Health(1000.),
+        IFrames::default(),
         Velocity::default(),
         SpriteBundle {
             texture,
@@ -29,9 +38,12 @@ fn spawn_player(mut cmd: Commands, asset_server: Res<AssetLoader>) {
     ));
 }
 
-fn move_player(mut query: Query<&mut Velocity, With<Player>>, keys: Res<ButtonInput<KeyCode>>) {
+fn move_player(
+    mut query: Query<(&mut Velocity, &mut Sprite), With<Player>>,
+    keys: Res<ButtonInput<KeyCode>>,
+) {
     let player_speed = 50.;
-    if let Ok(mut player) = query.get_single_mut() {
+    if let Ok((mut velocity, mut sprite)) = query.get_single_mut() {
         let mut new_vel = Vec2::default();
 
         if keys.pressed(KeyCode::KeyW) {
@@ -48,6 +60,56 @@ fn move_player(mut query: Query<&mut Velocity, With<Player>>, keys: Res<ButtonIn
             new_vel.x = 1.;
         }
 
-        player.0 = new_vel.normalize_or_zero() * player_speed;
+        sprite.flip_x = new_vel.x < 0.0;
+
+        velocity.0 = new_vel.normalize_or_zero() * player_speed;
+    }
+}
+
+fn shoot_bullets(
+    mut cmd: Commands,
+    player_q: Query<&Transform, With<Player>>,
+    enemy_q: Query<&Transform, (With<Enemy>, Without<Player>)>,
+    mut attack_timer: ResMut<PlayerAttackTimer>,
+    time: Res<Time>,
+    asset_loader: Res<AssetLoader>,
+) {
+    if let Ok(player) = player_q.get_single() {
+        if attack_timer.0.just_finished() {
+            let mut closest = f32::MAX;
+            let mut entity = None;
+            enemy_q.iter().for_each(|e| {
+                let dist = player.translation.distance(e.translation);
+                if dist < closest {
+                    closest = dist;
+                    entity = Some(e);
+                }
+            });
+
+            if let Some(entity) = entity {
+                let bullet_speed = 2500.;
+                let dt = time.delta_seconds();
+                let vel = (entity.translation - player.translation).normalize_or_zero()
+                    * dt
+                    * bullet_speed;
+
+                cmd.spawn(Bullet)
+                    .insert(Damage(5.))
+                    .insert(Velocity(vel.xy()))
+                    .insert(LifeTime(420))
+                    .insert(RigidBody::Dynamic)
+                    .insert(Sensor)
+                    .insert(Collider::ball(6.))
+                    .insert(ActiveEvents::COLLISION_EVENTS)
+                    .insert(GravityScale(0.))
+                    .insert(SpriteBundle {
+                        transform: Transform::from_translation(player.translation),
+                        texture: asset_loader.bullet_sprite.clone(),
+                        ..Default::default()
+                    })
+                    .insert(Name::new("Bullet"));
+            }
+        }
+        attack_timer.0.tick(time.delta());
     }
 }

@@ -4,6 +4,9 @@ use bevy::prelude::*;
 pub struct AssetLoader {
     pub player_sprite: Handle<Image>,
     pub enemy_sprite: Handle<Image>,
+    pub bullet_sprite: Handle<Image>,
+    pub death_sound: Handle<AudioSource>,
+    pub damage_sound: Handle<AudioSource>,
 }
 
 pub struct AssetLoaderPlugin;
@@ -17,9 +20,15 @@ impl Plugin for AssetLoaderPlugin {
 fn init_assets(mut cmd: Commands, asset_server: Res<AssetServer>) {
     let player_sprite = asset_server.load("player.png");
     let enemy_sprite = asset_server.load("enemy.png");
+    let bullet_sprite = asset_server.load("bullet.png");
+    let damage_sound = asset_server.load("damage.ogg");
+    let death_sound = asset_server.load("death.ogg");
 
     cmd.insert_resource(AssetLoader {
         enemy_sprite,
         player_sprite,
+        bullet_sprite,
+        damage_sound,
+        death_sound,
     });
 }
