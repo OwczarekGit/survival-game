@@ -2,7 +2,10 @@ use std::ops::Sub;
 
 use crate::{
     asset_loader_plugin::AssetLoader,
-    components::{Bullet, Damage, Enemy, Gathering, Health, IFrames, LifeTime, Velocity, Xp},
+    components::{
+        AttractedToPlayer, Bullet, Damage, Enemy, Gathering, Health, IFrames, LifeTime, Player,
+        Velocity, Xp,
+    },
     events::{SoundEvent, TreeDiedEvent, XpDropEvent},
 };
 use bevy::{audio::Volume, prelude::*};
@@ -25,8 +28,24 @@ impl Plugin for GenericPlugin {
                 play_sound_event,
                 tick_gathering,
                 handle_tree_death,
+                attract_all_xp,
             ),
         );
+    }
+}
+
+fn attract_all_xp(
+    player_p: Query<&Transform, With<Player>>,
+    mut xp_q: Query<(&Transform, &mut Velocity), (With<AttractedToPlayer>, Without<Player>)>,
+) {
+    let player = player_p.single();
+    for (t, mut v) in xp_q.iter_mut() {
+        const ATTRACT_SPEED: f32 = 1000.0;
+
+        let vector = (player.translation - t.translation).normalize_or_zero();
+
+        v.0.x = vector.x * ATTRACT_SPEED;
+        v.0.y = vector.y * ATTRACT_SPEED;
     }
 }
 
@@ -65,6 +84,7 @@ fn tick_gathering(mut query: Query<&mut Gathering>) {
         g.delay_frames = (g.delay_frames - 0.01).max(0.0);
     }
 }
+
 fn play_sound_event(
     mut cmd: Commands,
     mut sound_event: EventReader<SoundEvent>,
@@ -72,10 +92,11 @@ fn play_sound_event(
 ) {
     for ev in sound_event.read() {
         let (sound, volume) = match ev {
-            SoundEvent::Damage => (asset_loader.damage_sound.clone(), 0.3),
-            SoundEvent::Death => (asset_loader.death_sound.clone(), 0.2),
-            SoundEvent::XpPickup => (asset_loader.xp_pickup_sound.clone(), 0.5),
-            SoundEvent::AttackTree => (asset_loader.attack_tree_sound.clone(), 1.0),
+            SoundEvent::Damage => (asset_loader.damage_sound.clone(), 0.01),
+            SoundEvent::Death => (asset_loader.death_sound.clone(), 0.005),
+            SoundEvent::XpPickup => (asset_loader.xp_pickup_sound.clone(), 0.3),
+            SoundEvent::AttackTree => (asset_loader.attack_tree_sound.clone(), 0.5),
+            SoundEvent::TreeHitGround => (asset_loader.tree_hit_ground_sound.clone(), 0.7),
         };
 
         cmd.spawn(AudioBundle {
@@ -93,6 +114,7 @@ fn play_sound_event(
 fn handle_tree_death(
     mut cmd: Commands,
     mut tree_death_ev: EventReader<TreeDiedEvent>,
+    mut sound_events: EventWriter<SoundEvent>,
     asset_loader: Res<AssetLoader>,
 ) {
     let mut rng = rand::thread_rng();
@@ -117,6 +139,7 @@ fn handle_tree_death(
         if let Some(mut e) = cmd.get_entity(*e) {
             e.despawn();
         }
+        sound_events.send(SoundEvent::TreeHitGround);
     }
     tree_death_ev.clear();
 }

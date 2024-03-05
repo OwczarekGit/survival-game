@@ -10,6 +10,9 @@ pub struct Bullet;
 pub struct Enemy;
 
 #[derive(Debug, Clone, Component)]
+pub struct PlayerPickup(pub PickupType);
+
+#[derive(Debug, Clone, Component)]
 pub struct MainCamera;
 
 #[derive(Debug, Clone, Component)]
@@ -46,7 +49,13 @@ pub struct LifeTime(pub u32);
 pub struct Tree;
 
 #[derive(Debug, Clone, Copy, Default, Component)]
+pub struct AttractedToPlayer;
+
+#[derive(Debug, Clone, Copy, Default, Component)]
 pub struct TreeTrunk;
+
+#[derive(Debug, Clone, Copy, Default, Component)]
+pub struct Magnet;
 
 #[derive(Debug, Clone, Copy, Component)]
 pub enum TreeState {
@@ -60,4 +69,9 @@ pub struct Gathering {
     pub damage: f32,
     pub range: f32,
     pub delay_frames: f32,
+}
+
+#[derive(Debug, Clone, Copy, Component)]
+pub enum PickupType {
+    Magnet,
 }

@@ -15,7 +15,7 @@ pub struct EnemyPlugin;
 impl Plugin for EnemyPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(EnemySpawnTimer(Timer::from_seconds(
-            1.,
+            0.3,
             TimerMode::Repeating,
         )));
         app.add_systems(Update, spawn_enemy);
@@ -26,15 +26,13 @@ impl Plugin for EnemyPlugin {
 fn attack_player(
     mut enemy_q: Query<(&mut Velocity, &Transform, &mut Sprite), With<Enemy>>,
     player_q: Query<&Transform, (With<Player>, Without<Enemy>)>,
-    time: Res<Time>,
 ) {
-    let enemy_speed = 250.0;
-    let dt = time.delta_seconds();
+    let enemy_speed = 60.0;
     if let Ok(player) = player_q.get_single() {
         for (mut v, t, mut s) in enemy_q.iter_mut() {
             let vector = (player.translation - t.translation).normalize_or_zero();
-            v.0.x = vector.x * dt * enemy_speed;
-            v.0.y = vector.y * dt * enemy_speed;
+            v.0.x = vector.x * enemy_speed;
+            v.0.y = vector.y * enemy_speed;
             s.flip_x = v.0.x > 0.0;
         }
     }

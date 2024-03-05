@@ -19,7 +19,7 @@ impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, spawn_player);
         app.insert_resource(PlayerAttackTimer(Timer::from_seconds(
-            0.5,
+            0.1,
             TimerMode::Repeating,
         )));
         app.add_systems(Update, (move_player, shoot_bullets));
@@ -56,7 +56,7 @@ fn spawn_player(mut cmd: Commands, asset_loader: Res<AssetLoader>) {
         style: Style {
             display: Display::Grid,
             justify_content: JustifyContent::SpaceBetween,
-            grid_template_columns: vec![GridTrack::px(32.0), GridTrack::px(128.0)],
+            grid_template_columns: vec![GridTrack::px(64.0), GridTrack::px(128.0)],
             column_gap: Val::Px(8.),
             padding: UiRect::all(Val::Px(16.)),
             ..default()
@@ -68,7 +68,7 @@ fn spawn_player(mut cmd: Commands, asset_loader: Res<AssetLoader>) {
         parent.spawn((
             UiLevelDisplayNumber,
             TextBundle::from_section(
-                "0",
+                "1",
                 TextStyle {
                     font: asset_loader.font.clone(),
                     font_size: 32.0,
@@ -112,7 +112,7 @@ fn move_player(
     mut query: Query<(&mut Velocity, &mut Sprite), With<Player>>,
     keys: Res<ButtonInput<KeyCode>>,
 ) {
-    let player_speed = 50.;
+    let player_speed = 100.;
     if let Ok((mut velocity, mut sprite)) = query.get_single_mut() {
         let mut new_vel = Vec2::default();
 
@@ -157,7 +157,7 @@ fn shoot_bullets(
             });
 
             if let Some(entity) = entity {
-                let bullet_speed = 2500.;
+                let bullet_speed = 6000.;
                 let dt = time.delta_seconds();
                 let vel = (entity.translation - player.translation).normalize_or_zero()
                     * dt
@@ -169,13 +169,13 @@ fn shoot_bullets(
                     .insert(LifeTime(420))
                     .insert(RigidBody::Dynamic)
                     .insert(Sensor)
-                    .insert(Collider::ball(10.))
+                    .insert(Collider::ball(2.))
                     .insert(ActiveEvents::COLLISION_EVENTS)
                     .insert(SpriteBundle {
                         transform: Transform::from_translation(player.translation),
                         texture: asset_loader.bullet_sprite.clone(),
                         sprite: Sprite {
-                            custom_size: Some(Vec2::new(32., 32.)),
+                            custom_size: Some(Vec2::new(8., 8.)),
                             ..default()
                         },
                         ..Default::default()

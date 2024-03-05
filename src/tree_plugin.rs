@@ -1,5 +1,3 @@
-use std::f32::consts::PI;
-
 use bevy::prelude::*;
 use rand::Rng;
 
@@ -40,8 +38,8 @@ fn update_trees(
                 }
             }
             TreeState::Falling => {
-                t.rotate_z(0.05);
-                if t.rotation.z.abs() > PI / 4.0 {
+                t.rotate_z(0.04);
+                if t.rotation.z.abs() > 0.7 {
                     *state = TreeState::Dead;
                 }
             }
@@ -75,7 +73,7 @@ fn spawn_trees(mut cmd: Commands, asset_loader: Res<AssetLoader>) {
                 .with_children(|parent| {
                     parent.spawn((
                         Tree,
-                        Health(10.0, 10.0),
+                        Health(100.0, 100.0),
                         TreeState::Standing,
                         IFrames(0.0),
                         SpriteBundle {
