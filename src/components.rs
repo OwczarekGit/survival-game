@@ -41,3 +41,15 @@ pub struct IFrames(pub f32);
 
 #[derive(Debug, Clone, Copy, Default, Component)]
 pub struct LifeTime(pub u32);
+
+#[derive(Debug, Clone, Copy, Default, Component)]
+pub struct Tree;
+
+#[derive(Debug, Clone, Copy, Default, Component)]
+pub struct TreeTrunk;
+
+#[derive(Debug, Clone, Copy, Default, Component)]
+pub struct Gathering {
+    pub range: f32,
+    pub delay_frames: f32,
+}

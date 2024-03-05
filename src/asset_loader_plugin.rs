@@ -11,6 +11,11 @@ pub struct AssetLoader {
     pub death_sound: Handle<AudioSource>,
     pub damage_sound: Handle<AudioSource>,
     pub xp_pickup_sound: Handle<AudioSource>,
+
+    // Tree
+    pub tree_trunk_sprite: Handle<Image>,
+    pub tree_main_sprite: Handle<Image>,
+    pub attack_tree_sound: Handle<AudioSource>,
 }
 
 pub struct AssetLoaderPlugin;
@@ -32,6 +37,11 @@ fn init_assets(mut cmd: Commands, asset_server: Res<AssetServer>) {
     let death_sound = asset_server.load("death.ogg");
     let xp_pickup_sound = asset_server.load("xp_pickup.ogg");
 
+    // Tree
+    let tree_trunk_sprite = asset_server.load("tree-trunk.png");
+    let tree_main_sprite = asset_server.load("tree-main.png");
+    let attack_tree_sound = asset_server.load("attack_tree.ogg");
+
     cmd.insert_resource(AssetLoader {
         font,
         enemy_sprite,
@@ -42,5 +52,8 @@ fn init_assets(mut cmd: Commands, asset_server: Res<AssetServer>) {
         damage_sound,
         death_sound,
         xp_pickup_sound,
+        tree_trunk_sprite,
+        tree_main_sprite,
+        attack_tree_sound,
     });
 }

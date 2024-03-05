@@ -7,6 +7,7 @@ use camera_plugin::CameraPlugin;
 use enemy_plugin::EnemyPlugin;
 use generic_plugin::GenericPlugin;
 use player_plugin::PlayerPlugin;
+use tree_plugin::TreePlugin;
 use xp_plugin::XpPlugin;
 
 mod asset_loader_plugin;
@@ -16,6 +17,7 @@ mod enemy_plugin;
 mod events;
 mod generic_plugin;
 mod player_plugin;
+mod tree_plugin;
 mod xp_level;
 mod xp_plugin;
 
@@ -31,6 +33,7 @@ fn main() {
         .add_plugins(EnemyPlugin)
         .add_plugins(GenericPlugin)
         .add_plugins(XpPlugin)
+        .add_plugins(TreePlugin)
         .insert_resource(RapierConfiguration {
             gravity: Vec2::ZERO,
             ..default()

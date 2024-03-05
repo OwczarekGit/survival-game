@@ -2,7 +2,7 @@ use std::ops::Sub;
 
 use crate::{
     asset_loader_plugin::AssetLoader,
-    components::{Bullet, Damage, Enemy, Health, IFrames, LifeTime},
+    components::{Bullet, Damage, Enemy, Gathering, Health, IFrames, LifeTime},
     events::{SoundEvent, XpDropEvent},
 };
 use bevy::{audio::Volume, prelude::*};
@@ -21,6 +21,7 @@ impl Plugin for GenericPlugin {
                 tick_lifetimes,
                 bullet_enemy_collision,
                 play_sound_event,
+                tick_gathering,
             ),
         );
     }
@@ -56,23 +57,29 @@ fn tick_lifetimes(mut cmd: Commands, mut query: Query<(&mut LifeTime, Entity)>) 
     }
 }
 
+fn tick_gathering(mut query: Query<&mut Gathering>) {
+    for mut g in query.iter_mut() {
+        g.delay_frames = (g.delay_frames - 0.01).max(0.0);
+    }
+}
 fn play_sound_event(
     mut cmd: Commands,
     mut sound_event: EventReader<SoundEvent>,
     asset_loader: Res<AssetLoader>,
 ) {
     for ev in sound_event.read() {
-        let sound = match ev {
-            SoundEvent::Damage => asset_loader.damage_sound.clone(),
-            SoundEvent::Death => asset_loader.death_sound.clone(),
-            SoundEvent::XpPickup => asset_loader.xp_pickup_sound.clone(),
+        let (sound, volume) = match ev {
+            SoundEvent::Damage => (asset_loader.damage_sound.clone(), 0.3),
+            SoundEvent::Death => (asset_loader.death_sound.clone(), 0.2),
+            SoundEvent::XpPickup => (asset_loader.xp_pickup_sound.clone(), 0.5),
+            SoundEvent::AttackTree => (asset_loader.attack_tree_sound.clone(), 1.0),
         };
 
         cmd.spawn(AudioBundle {
             source: sound,
             settings: PlaybackSettings {
                 mode: bevy::audio::PlaybackMode::Despawn,
-                volume: Volume::new(0.3),
+                volume: Volume::new(volume),
                 ..Default::default()
             },
         });

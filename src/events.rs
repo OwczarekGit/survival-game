@@ -5,6 +5,7 @@ pub enum SoundEvent {
     Damage,
     Death,
     XpPickup,
+    AttackTree,
 }
 
 #[derive(Debug, Default, Event, Clone)]

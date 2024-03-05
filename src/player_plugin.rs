@@ -4,8 +4,8 @@ use bevy_rapier2d::prelude::*;
 use crate::{
     asset_loader_plugin::AssetLoader,
     components::{
-        Bullet, Damage, Enemy, Health, IFrames, LifeTime, PickupRange, Player, UiLevelDisplayBar,
-        UiLevelDisplayNumber, Velocity,
+        Bullet, Damage, Enemy, Gathering, Health, IFrames, LifeTime, PickupRange, Player,
+        UiLevelDisplayBar, UiLevelDisplayNumber, Velocity,
     },
     xp_level::XpLevel,
 };
@@ -31,6 +31,10 @@ fn spawn_player(mut cmd: Commands, asset_loader: Res<AssetLoader>) {
 
     cmd.spawn((
         Player,
+        Gathering {
+            range: 64.0,
+            delay_frames: 0.0,
+        },
         XpLevel::with_level(1),
         PickupRange(32.),
         Health(1000., 1000.),
