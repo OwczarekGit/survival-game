@@ -22,7 +22,7 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
         .add_plugins(WorldInspectorPlugin::new())
-        .add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
+        .add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(32.0))
         .add_plugins(RapierDebugRenderPlugin::default())
         .add_plugins(AssetLoaderPlugin)
         .add_plugins(CameraPlugin)

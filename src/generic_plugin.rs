@@ -65,6 +65,7 @@ fn play_sound_event(
         let sound = match ev {
             SoundEvent::Damage => asset_loader.damage_sound.clone(),
             SoundEvent::Death => asset_loader.death_sound.clone(),
+            SoundEvent::XpPickup => asset_loader.xp_pickup_sound.clone(),
         };
 
         cmd.spawn(AudioBundle {
@@ -76,6 +77,7 @@ fn play_sound_event(
             },
         });
     }
+    sound_event.clear();
 }
 
 // I don't even...

@@ -9,6 +9,7 @@ pub struct AssetLoader {
     pub xp_sprite: Handle<Image>,
     pub death_sound: Handle<AudioSource>,
     pub damage_sound: Handle<AudioSource>,
+    pub xp_pickup_sound: Handle<AudioSource>,
 }
 
 pub struct AssetLoaderPlugin;
@@ -27,6 +28,7 @@ fn init_assets(mut cmd: Commands, asset_server: Res<AssetServer>) {
     let xp_sprite = asset_server.load("xp.png");
     let damage_sound = asset_server.load("damage.ogg");
     let death_sound = asset_server.load("death.ogg");
+    let xp_pickup_sound = asset_server.load("xp_pickup.ogg");
 
     cmd.insert_resource(AssetLoader {
         enemy_sprite,
@@ -36,5 +38,6 @@ fn init_assets(mut cmd: Commands, asset_server: Res<AssetServer>) {
         xp_sprite,
         damage_sound,
         death_sound,
+        xp_pickup_sound,
     });
 }

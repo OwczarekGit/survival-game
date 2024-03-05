@@ -4,6 +4,7 @@ use bevy::prelude::*;
 pub enum SoundEvent {
     Damage,
     Death,
+    XpPickup,
 }
 
 #[derive(Debug, Default, Event, Clone)]

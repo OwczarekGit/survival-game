@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use crate::{
     asset_loader_plugin::AssetLoader,
     components::{PickupRange, Player, Velocity, Xp},
-    events::XpDropEvent,
+    events::{SoundEvent, XpDropEvent},
 };
 
 pub struct XpPlugin;
@@ -37,11 +37,13 @@ fn pickup_xp(
     mut cmd: Commands,
     player_q: Query<(&Transform, &PickupRange), With<Player>>,
     xp_q: Query<(&Transform, &Xp, Entity), (With<Xp>, Without<Player>)>,
+    mut sound_event: EventWriter<SoundEvent>,
 ) {
     if let Ok((player, range)) = player_q.get_single() {
         for (t, _xp, e) in xp_q.iter() {
             if player.translation.distance(t.translation) <= range.0 {
                 cmd.entity(e).despawn();
+                sound_event.send(SoundEvent::XpPickup);
             }
         }
     }
