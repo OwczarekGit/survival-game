@@ -3,7 +3,7 @@ use bevy_rapier2d::prelude::*;
 
 use crate::{
     asset_loader_plugin::AssetLoader,
-    components::{Bullet, Damage, Enemy, Health, IFrames, LifeTime, Player, Velocity},
+    components::{Bullet, Damage, Enemy, Health, IFrames, LifeTime, PickupRange, Player, Velocity},
 };
 
 #[derive(Debug, Resource)]
@@ -27,12 +27,17 @@ fn spawn_player(mut cmd: Commands, asset_server: Res<AssetLoader>) {
 
     cmd.spawn((
         Player,
+        PickupRange(32.),
         Health(1000.),
         IFrames::default(),
         Velocity::default(),
         SpriteBundle {
             texture,
             transform: Transform::from_xyz(0., 0., 10.),
+            sprite: Sprite {
+                custom_size: Some(Vec2::new(128., 128.)),
+                ..default()
+            },
             ..Default::default()
         },
     ));
@@ -99,12 +104,15 @@ fn shoot_bullets(
                     .insert(LifeTime(420))
                     .insert(RigidBody::Dynamic)
                     .insert(Sensor)
-                    .insert(Collider::ball(6.))
+                    .insert(Collider::ball(10.))
                     .insert(ActiveEvents::COLLISION_EVENTS)
-                    .insert(GravityScale(0.))
                     .insert(SpriteBundle {
                         transform: Transform::from_translation(player.translation),
                         texture: asset_loader.bullet_sprite.clone(),
+                        sprite: Sprite {
+                            custom_size: Some(Vec2::new(32., 32.)),
+                            ..default()
+                        },
                         ..Default::default()
                     })
                     .insert(Name::new("Bullet"));

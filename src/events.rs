@@ -1,7 +1,10 @@
-use bevy::ecs::event::Event;
+use bevy::prelude::*;
 
-#[derive(Event)]
-pub struct DamageEvent;
+#[derive(Debug, Event)]
+pub enum SoundEvent {
+    Damage,
+    Death,
+}
 
-#[derive(Event)]
-pub struct DeathEvent;
+#[derive(Debug, Default, Event, Clone)]
+pub struct XpDropEvent(pub Vec3, pub f32);

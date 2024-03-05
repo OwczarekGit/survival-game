@@ -18,6 +18,12 @@ pub struct Health(pub f32);
 #[derive(Debug, Clone, Component)]
 pub struct Damage(pub f32);
 
+#[derive(Debug, Clone, Component)]
+pub struct Xp(pub f32);
+
+#[derive(Debug, Clone, Component)]
+pub struct PickupRange(pub f32);
+
 #[derive(Debug, Clone, Default, Component)]
 pub struct Acceleration(pub Vec2);
 

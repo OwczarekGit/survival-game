@@ -16,7 +16,7 @@ fn create_camera(mut cmd: Commands) {
         MainCamera,
         Camera2dBundle {
             projection: OrthographicProjection {
-                scale: 2. / 10.,
+                scale: 4. / 10.,
                 near: 100.,
                 far: -100.,
                 ..default()

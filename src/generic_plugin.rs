@@ -3,7 +3,7 @@ use std::ops::Sub;
 use crate::{
     asset_loader_plugin::AssetLoader,
     components::{Bullet, Damage, Enemy, Health, IFrames, LifeTime},
-    events::{DamageEvent, DeathEvent},
+    events::{SoundEvent, XpDropEvent},
 };
 use bevy::{audio::Volume, prelude::*};
 use bevy_rapier2d::prelude::*;
@@ -12,8 +12,7 @@ pub struct GenericPlugin;
 
 impl Plugin for GenericPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<DamageEvent>();
-        app.add_event::<DeathEvent>();
+        app.add_event::<SoundEvent>();
         app.add_systems(
             Update,
             (
@@ -21,8 +20,7 @@ impl Plugin for GenericPlugin {
                 tick_iframes,
                 tick_lifetimes,
                 bullet_enemy_collision,
-                play_damage_event_sound,
-                play_death_event_sound,
+                play_sound_event,
             ),
         );
     }
@@ -58,55 +56,40 @@ fn tick_lifetimes(mut cmd: Commands, mut query: Query<(&mut LifeTime, Entity)>) 
     }
 }
 
-fn play_damage_event_sound(
+fn play_sound_event(
     mut cmd: Commands,
-    mut ev_damage: EventReader<DamageEvent>,
+    mut sound_event: EventReader<SoundEvent>,
     asset_loader: Res<AssetLoader>,
 ) {
-    if !ev_damage.is_empty() {
+    for ev in sound_event.read() {
+        let sound = match ev {
+            SoundEvent::Damage => asset_loader.damage_sound.clone(),
+            SoundEvent::Death => asset_loader.death_sound.clone(),
+        };
+
         cmd.spawn(AudioBundle {
-            source: asset_loader.damage_sound.clone(),
+            source: sound,
             settings: PlaybackSettings {
                 mode: bevy::audio::PlaybackMode::Despawn,
-                volume: Volume::new(0.5),
+                volume: Volume::new(0.3),
                 ..Default::default()
             },
-            ..Default::default()
         });
-        ev_damage.clear();
     }
 }
 
-fn play_death_event_sound(
-    mut cmd: Commands,
-    mut ev_death: EventReader<DeathEvent>,
-    asset_loader: Res<AssetLoader>,
-) {
-    if !ev_death.is_empty() {
-        cmd.spawn(AudioBundle {
-            source: asset_loader.death_sound.clone(),
-            settings: PlaybackSettings {
-                volume: Volume::new(0.1),
-                mode: bevy::audio::PlaybackMode::Despawn,
-                ..Default::default()
-            },
-            ..Default::default()
-        });
-        ev_death.clear();
-    }
-}
-
+// I don't even...
 fn bullet_enemy_collision(
     mut cmd: Commands,
-    mut enemy_q: Query<(&mut Health, &mut IFrames, Entity), With<Enemy>>,
+    mut enemy_q: Query<(&Transform, &mut Health, &mut IFrames, Entity), With<Enemy>>,
     bullet_q: Query<(&Damage, Entity), (With<Bullet>, Without<Enemy>)>,
     mut collision_events: EventReader<CollisionEvent>,
-    mut ev_damage: EventWriter<DamageEvent>,
-    mut ev_death: EventWriter<DeathEvent>,
+    mut sound_event: EventWriter<SoundEvent>,
+    mut xp_event: EventWriter<XpDropEvent>,
 ) {
     for collision_event in collision_events.read() {
         if let CollisionEvent::Started(a, b, _f) = collision_event {
-            for (mut hp, mut iframes, entity) in enemy_q.iter_mut() {
+            for (transform, mut hp, mut iframes, entity) in enemy_q.iter_mut() {
                 if a == &entity {
                     for (dmg, bullet_e) in bullet_q.iter() {
                         if &bullet_e == b {
@@ -116,9 +99,26 @@ fn bullet_enemy_collision(
 
                             if hp.0 <= 0.0 {
                                 cmd.entity(entity).despawn();
-                                ev_death.send(DeathEvent);
+                                sound_event.send(SoundEvent::Death);
+                                xp_event.send(XpDropEvent(transform.translation, 10.));
                             } else {
-                                ev_damage.send(DamageEvent);
+                                sound_event.send(SoundEvent::Damage);
+                            }
+                        }
+                    }
+                } else if b == &entity {
+                    for (dmg, bullet_e) in bullet_q.iter() {
+                        if &bullet_e == a {
+                            hp.0 = hp.0.sub(dmg.0);
+                            iframes.0 = 0.2;
+                            cmd.entity(bullet_e).despawn();
+
+                            if hp.0 <= 0.0 {
+                                cmd.entity(entity).despawn();
+                                sound_event.send(SoundEvent::Death);
+                                xp_event.send(XpDropEvent(transform.translation, 10.));
+                            } else {
+                                sound_event.send(SoundEvent::Damage);
                             }
                         }
                     }

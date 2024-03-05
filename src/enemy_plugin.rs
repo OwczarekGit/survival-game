@@ -59,7 +59,7 @@ fn spawn_enemy(
 
         cmd.spawn(Enemy)
             .insert(RigidBody::Dynamic)
-            .insert(Collider::capsule_y(12., 3.))
+            .insert(Collider::capsule_y(44., 12.))
             .insert(ActiveEvents::COLLISION_EVENTS)
             .insert(Sensor)
             .insert(IFrames::default())
@@ -68,9 +68,12 @@ fn spawn_enemy(
             .insert(SpriteBundle {
                 transform,
                 texture,
+                sprite: Sprite {
+                    custom_size: Some(Vec2::new(128., 128.)),
+                    ..default()
+                },
                 ..Default::default()
             })
-            .insert(GravityScale(0.))
             .insert(Name::new("Enemy"));
     }
 
