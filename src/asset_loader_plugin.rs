@@ -2,6 +2,7 @@ use bevy::prelude::*;
 
 #[derive(Debug, Resource, Clone)]
 pub struct AssetLoader {
+    pub font: Handle<Font>,
     pub player_sprite: Handle<Image>,
     pub enemy_sprite: Handle<Image>,
     pub bullet_sprite: Handle<Image>,
@@ -21,6 +22,7 @@ impl Plugin for AssetLoaderPlugin {
 }
 
 fn init_assets(mut cmd: Commands, asset_server: Res<AssetServer>) {
+    let font = asset_server.load("font.ttf");
     let player_sprite = asset_server.load("player.png");
     let enemy_sprite = asset_server.load("enemy.png");
     let bullet_sprite = asset_server.load("bullet.png");
@@ -31,6 +33,7 @@ fn init_assets(mut cmd: Commands, asset_server: Res<AssetServer>) {
     let xp_pickup_sound = asset_server.load("xp_pickup.ogg");
 
     cmd.insert_resource(AssetLoader {
+        font,
         enemy_sprite,
         player_sprite,
         bullet_sprite,

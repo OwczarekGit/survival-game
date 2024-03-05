@@ -64,7 +64,7 @@ fn spawn_enemy(
             .insert(Sensor)
             .insert(IFrames::default())
             .insert(Velocity::default())
-            .insert(Health(10.))
+            .insert(Health(10., 10.))
             .insert(SpriteBundle {
                 transform,
                 texture,

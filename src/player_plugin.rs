@@ -3,7 +3,11 @@ use bevy_rapier2d::prelude::*;
 
 use crate::{
     asset_loader_plugin::AssetLoader,
-    components::{Bullet, Damage, Enemy, Health, IFrames, LifeTime, PickupRange, Player, Velocity},
+    components::{
+        Bullet, Damage, Enemy, Health, IFrames, LifeTime, PickupRange, Player, UiLevelDisplayBar,
+        UiLevelDisplayNumber, Velocity,
+    },
+    xp_level::XpLevel,
 };
 
 #[derive(Debug, Resource)]
@@ -22,13 +26,14 @@ impl Plugin for PlayerPlugin {
     }
 }
 
-fn spawn_player(mut cmd: Commands, asset_server: Res<AssetLoader>) {
-    let texture = asset_server.player_sprite.clone();
+fn spawn_player(mut cmd: Commands, asset_loader: Res<AssetLoader>) {
+    let texture = asset_loader.player_sprite.clone();
 
     cmd.spawn((
         Player,
+        XpLevel::with_level(1),
         PickupRange(32.),
-        Health(1000.),
+        Health(1000., 1000.),
         IFrames::default(),
         Velocity::default(),
         SpriteBundle {
@@ -41,6 +46,61 @@ fn spawn_player(mut cmd: Commands, asset_server: Res<AssetLoader>) {
             ..Default::default()
         },
     ));
+
+    cmd.spawn(NodeBundle {
+        style: Style {
+            display: Display::Grid,
+            justify_content: JustifyContent::SpaceBetween,
+            grid_template_columns: vec![GridTrack::px(32.0), GridTrack::px(128.0)],
+            column_gap: Val::Px(8.),
+            padding: UiRect::all(Val::Px(16.)),
+            ..default()
+        },
+        ..default()
+    })
+    .insert(Name::new("Xp UI"))
+    .with_children(|parent| {
+        parent.spawn((
+            UiLevelDisplayNumber,
+            TextBundle::from_section(
+                "0",
+                TextStyle {
+                    font: asset_loader.font.clone(),
+                    font_size: 32.0,
+                    color: Color::WHITE,
+                },
+            ),
+        ));
+
+        parent
+            .spawn((
+                NodeBundle {
+                    style: Style {
+                        width: Val::Percent(100.0),
+                        ..default()
+                    },
+                    ..default()
+                },
+                Outline {
+                    color: Color::WHITE,
+                    offset: Val::Px(2.0),
+                    width: Val::Px(4.0),
+                },
+            ))
+            .with_children(|parent| {
+                parent.spawn((
+                    UiLevelDisplayBar,
+                    NodeBundle {
+                        style: Style {
+                            width: Val::Percent(0.0),
+                            ..default()
+                        },
+                        background_color: BackgroundColor(Color::hex("69BD30").unwrap()),
+                        ..default()
+                    },
+                ));
+            });
+    });
 }
 
 fn move_player(

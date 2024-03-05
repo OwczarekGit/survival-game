@@ -16,6 +16,7 @@ mod enemy_plugin;
 mod events;
 mod generic_plugin;
 mod player_plugin;
+mod xp_level;
 mod xp_plugin;
 
 fn main() {
