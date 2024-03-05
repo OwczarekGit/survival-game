@@ -32,6 +32,7 @@ fn spawn_player(mut cmd: Commands, asset_loader: Res<AssetLoader>) {
     cmd.spawn((
         Player,
         Gathering {
+            damage: 20.0,
             range: 64.0,
             delay_frames: 0.0,
         },

@@ -2,17 +2,19 @@ use std::ops::Sub;
 
 use crate::{
     asset_loader_plugin::AssetLoader,
-    components::{Bullet, Damage, Enemy, Gathering, Health, IFrames, LifeTime},
-    events::{SoundEvent, XpDropEvent},
+    components::{Bullet, Damage, Enemy, Gathering, Health, IFrames, LifeTime, Velocity, Xp},
+    events::{SoundEvent, TreeDiedEvent, XpDropEvent},
 };
 use bevy::{audio::Volume, prelude::*};
 use bevy_rapier2d::prelude::*;
+use rand::Rng;
 
 pub struct GenericPlugin;
 
 impl Plugin for GenericPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<SoundEvent>();
+        app.add_event::<TreeDiedEvent>();
         app.add_systems(
             Update,
             (
@@ -22,6 +24,7 @@ impl Plugin for GenericPlugin {
                 bullet_enemy_collision,
                 play_sound_event,
                 tick_gathering,
+                handle_tree_death,
             ),
         );
     }
@@ -85,6 +88,37 @@ fn play_sound_event(
         });
     }
     sound_event.clear();
+}
+
+fn handle_tree_death(
+    mut cmd: Commands,
+    mut tree_death_ev: EventReader<TreeDiedEvent>,
+    asset_loader: Res<AssetLoader>,
+) {
+    let mut rng = rand::thread_rng();
+    const SPLAT: f32 = 10.0;
+
+    for TreeDiedEvent(e, pos, xp) in tree_death_ev.read() {
+        let range = rng.gen_range(1..=5);
+        for _i in 0..range {
+            cmd.spawn(Xp(*xp))
+                .insert(SpriteBundle {
+                    transform: Transform::from_translation(*pos),
+                    texture: asset_loader.xp_sprite.clone(),
+                    ..default()
+                })
+                .insert(Velocity(Vec2::new(
+                    rng.gen_range(-SPLAT..SPLAT),
+                    rng.gen_range(-SPLAT..SPLAT),
+                )))
+                .insert(Name::new("XP"));
+        }
+
+        if let Some(mut e) = cmd.get_entity(*e) {
+            e.despawn();
+        }
+    }
+    tree_death_ev.clear();
 }
 
 // I don't even...

@@ -1,11 +1,13 @@
+use std::f32::consts::PI;
+
 use bevy::prelude::*;
 use rand::Rng;
 
 use crate::{
     asset_loader_plugin::AssetLoader,
     camera_plugin::{MouseHighlightedAction, MouseScreenPostion},
-    components::{Gathering, IFrames, MainCamera, Player, Tree, TreeTrunk},
-    events::SoundEvent,
+    components::{Gathering, Health, IFrames, MainCamera, Player, Tree, TreeState, TreeTrunk},
+    events::{SoundEvent, TreeDiedEvent},
 };
 
 pub struct TreePlugin;
@@ -13,7 +15,40 @@ pub struct TreePlugin;
 impl Plugin for TreePlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, spawn_trees);
-        app.add_systems(Update, (select_tree, cut_tree));
+        app.add_systems(Update, (select_tree, cut_tree, update_trees));
+    }
+}
+
+fn update_trees(
+    mut tree_q: Query<
+        (
+            &mut Transform,
+            &GlobalTransform,
+            &Health,
+            &mut TreeState,
+            Entity,
+        ),
+        With<Tree>,
+    >,
+    mut tree_died_event: EventWriter<TreeDiedEvent>,
+) {
+    for (mut t, gt, hp, mut state, e) in tree_q.iter_mut() {
+        match *state {
+            TreeState::Standing => {
+                if hp.0 <= 0.0 {
+                    *state = TreeState::Falling;
+                }
+            }
+            TreeState::Falling => {
+                t.rotate_z(0.05);
+                if t.rotation.z.abs() > PI / 4.0 {
+                    *state = TreeState::Dead;
+                }
+            }
+            TreeState::Dead => {
+                tree_died_event.send(TreeDiedEvent(e, gt.translation(), 100.0));
+            }
+        }
     }
 }
 
@@ -21,7 +56,7 @@ fn spawn_trees(mut cmd: Commands, asset_loader: Res<AssetLoader>) {
     let mut rng = rand::thread_rng();
 
     for x in -1000..1000 {
-        for y in (-1000..1000) {
+        for y in -1000..1000 {
             if rng.gen_bool(1.0 / 1_000.0) {
                 let pos = Vec3::new((x * 10) as f32, (y * 10) as f32, 7.0);
 
@@ -40,6 +75,8 @@ fn spawn_trees(mut cmd: Commands, asset_loader: Res<AssetLoader>) {
                 .with_children(|parent| {
                     parent.spawn((
                         Tree,
+                        Health(10.0, 10.0),
+                        TreeState::Standing,
                         IFrames(0.0),
                         SpriteBundle {
                             sprite: Sprite {
@@ -51,7 +88,8 @@ fn spawn_trees(mut cmd: Commands, asset_loader: Res<AssetLoader>) {
                             ..default()
                         },
                     ));
-                });
+                })
+                .insert(Name::new("Tree"));
             }
         }
     }
@@ -92,13 +130,13 @@ fn select_tree(
 
 fn cut_tree(
     mut player_q: Query<&mut Gathering, (With<Player>, Without<Tree>)>,
-    mut tree_q: Query<(&mut Transform, &mut IFrames, Entity), With<Tree>>,
+    mut tree_q: Query<(&mut Transform, &mut IFrames, &mut Health, Entity), With<Tree>>,
     mut mouse_action: ResMut<MouseHighlightedAction>,
     mouse_buttons: Res<ButtonInput<MouseButton>>,
     mut sound_event: EventWriter<SoundEvent>,
 ) {
     if mouse_buttons.pressed(MouseButton::Left) && mouse_action.0.is_some() {
-        for (_t, mut iframes, e) in tree_q.iter_mut() {
+        for (_t, mut iframes, mut hp, e) in tree_q.iter_mut() {
             let mut player = player_q.single_mut();
             if mouse_action.0.is_some()
                 && mouse_action.0.unwrap() == e
@@ -107,6 +145,7 @@ fn cut_tree(
             {
                 player.delay_frames = 0.30;
                 iframes.0 = 0.30;
+                hp.0 -= player.damage;
                 sound_event.send(SoundEvent::AttackTree);
                 mouse_action.0 = None;
             }

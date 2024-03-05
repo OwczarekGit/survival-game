@@ -48,8 +48,16 @@ pub struct Tree;
 #[derive(Debug, Clone, Copy, Default, Component)]
 pub struct TreeTrunk;
 
+#[derive(Debug, Clone, Copy, Component)]
+pub enum TreeState {
+    Standing,
+    Falling,
+    Dead,
+}
+
 #[derive(Debug, Clone, Copy, Default, Component)]
 pub struct Gathering {
+    pub damage: f32,
     pub range: f32,
     pub delay_frames: f32,
 }

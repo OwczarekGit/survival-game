@@ -22,7 +22,7 @@ impl XpLevel {
     pub fn add_xp(&mut self, Xp(xp): Xp) {
         let xp_now = xp + self.xp;
 
-        self.level = self.level + (xp_now / self.xp_to_next) as u32;
+        self.level += (xp_now / self.xp_to_next) as u32;
         self.xp = xp_now % self.xp_to_next;
         self.xp_to_next = self.level as f32 * 100.;
     }
