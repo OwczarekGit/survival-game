@@ -8,7 +8,7 @@ use crate::{
     },
     events::{SoundEvent, TreeDiedEvent, XpDropEvent},
     spawner_plugin::{SpawnedEntiyDeathEvent, SpawnerId},
-    utils::random_vector,
+    utils::{random_mag_from_range, random_vector},
 };
 use bevy::{audio::Volume, prelude::*};
 use bevy_rapier2d::prelude::*;
@@ -91,11 +91,12 @@ fn play_sound_event(
 ) {
     for ev in sound_event.read() {
         let (sound, volume) = match ev {
-            SoundEvent::Damage => (asset_loader.damage_sound.clone(), 0.01),
+            SoundEvent::Damage => (asset_loader.damage_sound.clone(), 0.1),
             SoundEvent::Death => (asset_loader.death_sound.clone(), 0.005),
             SoundEvent::XpPickup => (asset_loader.xp_pickup_sound.clone(), 0.3),
             SoundEvent::AttackTree => (asset_loader.attack_tree_sound.clone(), 0.5),
             SoundEvent::TreeHitGround => (asset_loader.tree_hit_ground_sound.clone(), 0.7),
+            SoundEvent::PistolShoot => (asset_loader.pistol_shoot_sound.clone(), 0.5),
         };
 
         cmd.spawn(AudioBundle {
@@ -122,7 +123,7 @@ fn handle_tree_death(
         let range = rng.gen_range(1..=5);
         for _i in 0..range {
             let mut vector = random_vector();
-            vector *= 10.0;
+            vector *= random_mag_from_range(-15.0, 15.0);
             cmd.spawn(Xp(*xp))
                 .insert(SpriteBundle {
                     transform: Transform::from_translation(*pos),
@@ -131,7 +132,7 @@ fn handle_tree_death(
                 })
                 .insert(Velocity::linear(vector.truncate()))
                 .insert(RigidBody::Dynamic)
-                .insert(Restitution::coefficient(0.01))
+                .insert(Restitution::coefficient(2.0))
                 .insert(Name::new("XP"));
         }
 

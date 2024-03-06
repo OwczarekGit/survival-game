@@ -133,7 +133,7 @@ fn cut_tree(
     mouse_buttons: Res<ButtonInput<MouseButton>>,
     mut sound_event: EventWriter<SoundEvent>,
 ) {
-    if mouse_buttons.pressed(MouseButton::Left) && mouse_action.0.is_some() {
+    if mouse_buttons.pressed(MouseButton::Right) && mouse_action.0.is_some() {
         for (_t, mut iframes, mut hp, e) in tree_q.iter_mut() {
             let mut player = player_q.single_mut();
             if mouse_action.0.is_some()

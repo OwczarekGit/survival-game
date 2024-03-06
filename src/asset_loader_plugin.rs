@@ -13,6 +13,7 @@ pub struct AssetLoader {
     pub death_sound: Handle<AudioSource>,
     pub damage_sound: Handle<AudioSource>,
     pub xp_pickup_sound: Handle<AudioSource>,
+    pub pistol_shoot_sound: Handle<AudioSource>,
 
     // Tree
     pub tree_trunk_sprite: Handle<Image>,
@@ -41,6 +42,7 @@ fn init_assets(mut cmd: Commands, asset_server: Res<AssetServer>) {
     let damage_sound = asset_server.load("damage.ogg");
     let death_sound = asset_server.load("death.ogg");
     let xp_pickup_sound = asset_server.load("xp_pickup.ogg");
+    let pistol_shoot_sound = asset_server.load("pistol_fired.ogg");
 
     // Tree
     let tree_trunk_sprite = asset_server.load("tree-trunk.png");
@@ -60,6 +62,7 @@ fn init_assets(mut cmd: Commands, asset_server: Res<AssetServer>) {
         damage_sound,
         death_sound,
         xp_pickup_sound,
+        pistol_shoot_sound,
         tree_trunk_sprite,
         tree_main_sprite,
         attack_tree_sound,

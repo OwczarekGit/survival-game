@@ -1,10 +1,10 @@
+use aggressive_ai_plugin::AggressiveAiPlugin;
 use bevy::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_rapier2d::prelude::*;
 
 use asset_loader_plugin::AssetLoaderPlugin;
 use camera_plugin::CameraPlugin;
-use enemy_plugin::EnemyPlugin;
 use generic_plugin::GenericPlugin;
 use pickup_plugin::PickupPlugin;
 use player_plugin::PlayerPlugin;
@@ -12,10 +12,10 @@ use spawner_plugin::SpawnerPlugin;
 use tree_plugin::TreePlugin;
 use xp_plugin::XpPlugin;
 
+mod aggressive_ai_plugin;
 mod asset_loader_plugin;
 mod camera_plugin;
 mod components;
-mod enemy_plugin;
 mod events;
 mod generic_plugin;
 mod pickup_plugin;
@@ -35,12 +35,12 @@ fn main() {
         .add_plugins(AssetLoaderPlugin)
         .add_plugins(CameraPlugin)
         .add_plugins(PlayerPlugin)
-        .add_plugins(EnemyPlugin)
         .add_plugins(GenericPlugin)
         .add_plugins(XpPlugin)
         .add_plugins(TreePlugin)
         .add_plugins(PickupPlugin)
         .add_plugins(SpawnerPlugin)
+        .add_plugins(AggressiveAiPlugin)
         .insert_resource(RapierConfiguration {
             gravity: Vec2::ZERO,
             ..default()

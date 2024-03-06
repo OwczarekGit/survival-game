@@ -9,6 +9,7 @@ pub enum SoundEvent {
     XpPickup,
     AttackTree,
     TreeHitGround,
+    PistolShoot,
 }
 
 #[derive(Debug, Event)]

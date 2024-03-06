@@ -3,10 +3,12 @@ use bevy_rapier2d::prelude::*;
 
 use crate::{
     asset_loader_plugin::AssetLoader,
+    camera_plugin::MouseScreenPostion,
     components::{
-        Bullet, Damage, Enemy, Gathering, Health, IFrames, LifeTime, PickupRange, Player,
+        Bullet, Damage, Gathering, Health, IFrames, LifeTime, MainCamera, PickupRange, Player,
         UiLevelDisplayBar, UiLevelDisplayNumber,
     },
+    events::SoundEvent,
     xp_level::XpLevel,
 };
 
@@ -18,11 +20,9 @@ pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, spawn_player);
-        app.insert_resource(PlayerAttackTimer(Timer::from_seconds(
-            0.1,
-            TimerMode::Repeating,
-        )));
-        app.add_systems(Update, (move_player, shoot_bullets));
+        app.insert_resource(PlayerAttackTimer(Timer::from_seconds(0.5, TimerMode::Once)));
+        app.add_systems(Update, move_player);
+        app.add_systems(Update, shoot_bullets);
     }
 }
 
@@ -140,51 +140,50 @@ fn move_player(
 
 fn shoot_bullets(
     mut cmd: Commands,
-    player_q: Query<&Transform, With<Player>>,
-    enemy_q: Query<&Transform, (With<Enemy>, Without<Player>)>,
+    camera_q: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
+    player_q: Query<&Transform, (With<Player>, Without<MainCamera>)>,
     mut attack_timer: ResMut<PlayerAttackTimer>,
     time: Res<Time>,
     asset_loader: Res<AssetLoader>,
+    keys: Res<ButtonInput<MouseButton>>,
+    mouse: Res<MouseScreenPostion>,
+    mut sound_events: EventWriter<SoundEvent>,
 ) {
+    attack_timer.0.tick(time.delta());
     if let Ok(player) = player_q.get_single() {
-        if attack_timer.0.just_finished() {
-            let mut closest = f32::MAX;
-            let mut entity = None;
-            enemy_q.iter().for_each(|e| {
-                let dist = player.translation.distance(e.translation);
-                if dist < closest {
-                    closest = dist;
-                    entity = Some(e);
-                }
-            });
+        let camera = camera_q.single();
+        if attack_timer.0.finished() && keys.pressed(MouseButton::Left) {
+            let cursor_world = camera
+                .0
+                .viewport_to_world_2d(camera.1, mouse.0)
+                .unwrap_or(Vec2::ZERO);
+            const BULLET_SPEED: f32 = 20_000.0;
+            let dt = time.delta_seconds();
+            let vel = (cursor_world - player.translation.truncate()).normalize_or_zero()
+                * dt
+                * BULLET_SPEED;
 
-            if let Some(entity) = entity {
-                let bullet_speed = 6000.;
-                let dt = time.delta_seconds();
-                let vel = (entity.translation - player.translation).normalize_or_zero()
-                    * dt
-                    * bullet_speed;
+            cmd.spawn(Bullet)
+                .insert(Damage(5.))
+                .insert(Velocity::linear(vel))
+                .insert(LifeTime(200))
+                .insert(RigidBody::Dynamic)
+                .insert(Sensor)
+                .insert(Collider::ball(2.))
+                .insert(ActiveEvents::COLLISION_EVENTS)
+                .insert(SpriteBundle {
+                    transform: Transform::from_translation(player.translation),
+                    texture: asset_loader.bullet_sprite.clone(),
+                    sprite: Sprite {
+                        custom_size: Some(Vec2::new(8., 8.)),
+                        ..default()
+                    },
+                    ..Default::default()
+                })
+                .insert(Name::new("Bullet"));
 
-                cmd.spawn(Bullet)
-                    .insert(Damage(5.))
-                    .insert(Velocity::linear(vel.truncate()))
-                    .insert(LifeTime(420))
-                    .insert(RigidBody::Dynamic)
-                    .insert(Sensor)
-                    .insert(Collider::ball(2.))
-                    .insert(ActiveEvents::COLLISION_EVENTS)
-                    .insert(SpriteBundle {
-                        transform: Transform::from_translation(player.translation),
-                        texture: asset_loader.bullet_sprite.clone(),
-                        sprite: Sprite {
-                            custom_size: Some(Vec2::new(8., 8.)),
-                            ..default()
-                        },
-                        ..Default::default()
-                    })
-                    .insert(Name::new("Bullet"));
-            }
+            sound_events.send(SoundEvent::PistolShoot);
+            attack_timer.0.reset();
         }
-        attack_timer.0.tick(time.delta());
     }
 }

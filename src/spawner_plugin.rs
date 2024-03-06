@@ -3,6 +3,7 @@ use bevy_rapier2d::prelude::*;
 use rand::Rng;
 
 use crate::{
+    aggressive_ai_plugin::AggressiveAi,
     asset_loader_plugin::AssetLoader,
     components::{Enemy, Health, IFrames, Player},
     utils::random_vector,
@@ -57,6 +58,7 @@ fn spawner_tick(
                 .insert(Velocity::default())
                 .insert(Health(10., 10.))
                 .insert(SpawnerId(e))
+                .insert(AggressiveAi::with_view_range(200.0))
                 .insert(SpriteBundle {
                     transform: Transform::from_translation(t.translation),
                     texture: assets.enemy_sprite.clone(),
@@ -79,7 +81,7 @@ fn spawn_spawners(
     spawner_q: Query<Entity, (With<Spawner>, Without<Player>)>,
     assets: Res<AssetLoader>,
 ) {
-    const MAX_SPAWNERS: usize = 10;
+    const MAX_SPAWNERS: usize = 20;
 
     let spawners_count = spawner_q.iter().len();
 
@@ -88,12 +90,12 @@ fn spawn_spawners(
 
         let t = player_q.single().translation;
 
-        let vector = random_vector() * rng.gen_range(2000.0..8000.0);
+        let vector = random_vector() * rng.gen_range(1000.0..8000.0);
 
         cmd.spawn((
             Spawner,
             SpawnerSpawnTimer {
-                timer: Timer::from_seconds(10.0, TimerMode::Repeating),
+                timer: Timer::from_seconds(1.0, TimerMode::Repeating),
                 spawn_limit: 16,
                 alive_now: 0,
             },
