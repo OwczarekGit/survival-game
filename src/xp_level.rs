@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::components::Xp;
 
-#[derive(Debug, Clone, Default, Component)]
+#[derive(Debug, Clone, Default, Component, Reflect)]
 pub struct XpLevel {
     pub xp: f32,
     pub xp_to_next: f32,

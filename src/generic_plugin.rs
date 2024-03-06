@@ -3,7 +3,8 @@ use std::ops::Sub;
 use crate::{
     asset_loader_plugin::AssetLoader,
     components::{
-        AttractedToPlayer, Bullet, Damage, Enemy, Gathering, Health, IFrames, LifeTime, Player, Xp,
+        AttractedToPlayer, Bullet, Damage, Enemy, Gathering, Health, IFrames, LifeTime,
+        PickupRange, PickupType, Player, PlayerPickup, TreeState, Xp,
     },
     events::{SoundEvent, TreeDiedEvent, XpDropEvent},
     spawner_plugin::{SpawnedEntiyDeathEvent, SpawnerId},
@@ -31,6 +32,15 @@ impl Plugin for GenericPlugin {
                 attract_all_xp,
             ),
         );
+        app.register_type::<PlayerPickup>();
+        app.register_type::<Health>();
+        app.register_type::<PickupRange>();
+        app.register_type::<Damage>();
+        app.register_type::<IFrames>();
+        app.register_type::<LifeTime>();
+        app.register_type::<TreeState>();
+        app.register_type::<Gathering>();
+        app.register_type::<PickupType>();
     }
 }
 

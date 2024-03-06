@@ -8,16 +8,16 @@ use crate::{
     utils::random_vector,
 };
 
-#[derive(Debug, Component)]
+#[derive(Debug, Component, Reflect)]
 pub struct Spawner;
 
-#[derive(Debug, Component)]
+#[derive(Debug, Component, Reflect)]
 pub struct SpawnerId(pub Entity);
 
 #[derive(Debug, Event)]
 pub struct SpawnedEntiyDeathEvent(pub Entity);
 
-#[derive(Debug, Component)]
+#[derive(Debug, Component, Reflect)]
 pub struct SpawnerSpawnTimer {
     pub timer: Timer,
     pub spawn_limit: u32,
@@ -33,6 +33,8 @@ impl Plugin for SpawnerPlugin {
             Update,
             (spawn_spawners, spawner_tick, handle_spawned_entity_death),
         );
+        app.register_type::<Spawner>();
+        app.register_type::<SpawnerSpawnTimer>();
     }
 }
 

@@ -14,6 +14,8 @@ impl Plugin for XpPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<XpDropEvent>();
         app.add_systems(Update, (spawn_xp, pickup_xp, attract_xp, update_xp_display));
+        app.register_type::<XpLevel>();
+        app.register_type::<Xp>();
     }
 }
 
