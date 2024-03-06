@@ -41,6 +41,7 @@ fn main() {
         .add_plugins(PickupPlugin)
         .add_plugins(SpawnerPlugin)
         .add_plugins(AggressiveAiPlugin)
+        .insert_resource(ClearColor(Color::rgb_u8(33, 70, 33)))
         .insert_resource(RapierConfiguration {
             gravity: Vec2::ZERO,
             ..default()

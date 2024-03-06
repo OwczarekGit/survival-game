@@ -157,7 +157,7 @@ fn shoot_bullets(
                 .0
                 .viewport_to_world_2d(camera.1, mouse.0)
                 .unwrap_or(Vec2::ZERO);
-            const BULLET_SPEED: f32 = 20_000.0;
+            const BULLET_SPEED: f32 = 30_000.0;
             let dt = time.delta_seconds();
             let vel = (cursor_world - player.translation.truncate()).normalize_or_zero()
                 * dt

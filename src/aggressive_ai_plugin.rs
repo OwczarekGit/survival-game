@@ -27,13 +27,14 @@ impl AggressiveAi {
     pub fn with_view_range(view_range: f32) -> Self {
         Self {
             view_range,
-            state: AggressiveAiState::Stand,
+            state: AggressiveAiState::ImmediateWander,
         }
     }
 }
 
 #[derive(Debug, Component, Reflect)]
 pub enum AggressiveAiState {
+    ImmediateWander,
     Attack,
     Stand,
     Wander(Vec2),
@@ -89,6 +90,13 @@ fn process_ai_frame(
                 ai_v.linvel = Vec2::ZERO;
                 ai_a.state = AggressiveAiState::Stand;
             }
+        }
+        AggressiveAiState::ImmediateWander => {
+            let mut point = random_vector().truncate() * random_mag_from_range(50.0, 300.0);
+            point.x += ai_t.translation.x;
+            point.y += ai_t.translation.y;
+
+            ai_a.state = AggressiveAiState::Wander(point);
         }
     }
 }

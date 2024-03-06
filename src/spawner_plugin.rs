@@ -95,7 +95,7 @@ fn spawn_spawners(
         cmd.spawn((
             Spawner,
             SpawnerSpawnTimer {
-                timer: Timer::from_seconds(1.0, TimerMode::Repeating),
+                timer: Timer::from_seconds(10.0, TimerMode::Repeating),
                 spawn_limit: 16,
                 alive_now: 0,
             },
