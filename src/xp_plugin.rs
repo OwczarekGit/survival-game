@@ -1,8 +1,9 @@
 use bevy::prelude::*;
+use bevy_rapier2d::prelude::*;
 
 use crate::{
     asset_loader_plugin::AssetLoader,
-    components::{PickupRange, Player, UiLevelDisplayBar, UiLevelDisplayNumber, Velocity, Xp},
+    components::{PickupRange, Player, UiLevelDisplayBar, UiLevelDisplayNumber, Xp},
     events::{SoundEvent, XpDropEvent},
     xp_level::XpLevel,
 };
@@ -28,7 +29,8 @@ fn spawn_xp(
                 texture: asset_loader.xp_sprite.clone(),
                 ..default()
             })
-            .insert(Velocity(Vec2::ZERO))
+            .insert(Velocity::zero())
+            .insert(RigidBody::Dynamic)
             .insert(Name::new("XP"));
     }
     xp_drop_event.clear();
@@ -65,7 +67,7 @@ fn attract_xp(
                 let vector =
                     ((player.translation - t.translation).normalize_or_zero() * dt * attract_speed)
                         * dist;
-                v.0 = vector.xy();
+                v.linvel = vector.xy();
             }
         }
     }

@@ -39,6 +39,7 @@ fn spawn_magnets(
                 texture: assets.magnet_sprite.clone(),
                 ..default()
             },
+            Name::new("Magnet"),
         ));
     }
 }

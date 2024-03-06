@@ -1,6 +1,7 @@
 use bevy::prelude::*;
+use bevy_rapier2d::prelude::*;
 
-use crate::components::{Enemy, Player, Velocity};
+use crate::components::{Enemy, Player};
 
 #[derive(Debug, Resource)]
 struct EnemySpawnTimer(Timer);
@@ -21,9 +22,9 @@ fn attack_player(
     if let Ok(player) = player_q.get_single() {
         for (mut v, t, mut s) in enemy_q.iter_mut() {
             let vector = (player.translation - t.translation).normalize_or_zero();
-            v.0.x = vector.x * ENEMY_SPEED;
-            v.0.y = vector.y * ENEMY_SPEED;
-            s.flip_x = v.0.x > 0.0;
+            v.linvel.x = vector.x * ENEMY_SPEED;
+            v.linvel.y = vector.y * ENEMY_SPEED;
+            s.flip_x = v.linvel.x > 0.0;
         }
     }
 }

@@ -3,11 +3,11 @@ use std::ops::Sub;
 use crate::{
     asset_loader_plugin::AssetLoader,
     components::{
-        AttractedToPlayer, Bullet, Damage, Enemy, Gathering, Health, IFrames, LifeTime, Player,
-        Velocity, Xp,
+        AttractedToPlayer, Bullet, Damage, Enemy, Gathering, Health, IFrames, LifeTime, Player, Xp,
     },
     events::{SoundEvent, TreeDiedEvent, XpDropEvent},
     spawner_plugin::{SpawnedEntiyDeathEvent, SpawnerId},
+    utils::random_vector,
 };
 use bevy::{audio::Volume, prelude::*};
 use bevy_rapier2d::prelude::*;
@@ -22,7 +22,6 @@ impl Plugin for GenericPlugin {
         app.add_systems(
             Update,
             (
-                update_postions,
                 tick_iframes,
                 tick_lifetimes,
                 bullet_enemy_collision,
@@ -45,19 +44,8 @@ fn attract_all_xp(
 
         let vector = (player.translation - t.translation).normalize_or_zero();
 
-        v.0.x = vector.x * ATTRACT_SPEED;
-        v.0.y = vector.y * ATTRACT_SPEED;
-    }
-}
-
-fn update_postions(
-    mut query: Query<(&mut Transform, &crate::components::Velocity)>,
-    time: Res<Time>,
-) {
-    let dt = time.delta_seconds();
-    for (mut t, v) in query.iter_mut() {
-        t.translation.x += v.0.x * dt;
-        t.translation.y += v.0.y * dt;
+        v.linvel.x = vector.x * ATTRACT_SPEED;
+        v.linvel.y = vector.y * ATTRACT_SPEED;
     }
 }
 
@@ -119,21 +107,21 @@ fn handle_tree_death(
     asset_loader: Res<AssetLoader>,
 ) {
     let mut rng = rand::thread_rng();
-    const SPLAT: f32 = 10.0;
 
     for TreeDiedEvent(e, pos, xp) in tree_death_ev.read() {
         let range = rng.gen_range(1..=5);
         for _i in 0..range {
+            let mut vector = random_vector();
+            vector *= 10.0;
             cmd.spawn(Xp(*xp))
                 .insert(SpriteBundle {
                     transform: Transform::from_translation(*pos),
                     texture: asset_loader.xp_sprite.clone(),
                     ..default()
                 })
-                .insert(Velocity(Vec2::new(
-                    rng.gen_range(-SPLAT..SPLAT),
-                    rng.gen_range(-SPLAT..SPLAT),
-                )))
+                .insert(Velocity::linear(vector.truncate()))
+                .insert(RigidBody::Dynamic)
+                .insert(Restitution::coefficient(0.01))
                 .insert(Name::new("XP"));
         }
 

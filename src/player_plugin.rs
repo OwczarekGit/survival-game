@@ -5,7 +5,7 @@ use crate::{
     asset_loader_plugin::AssetLoader,
     components::{
         Bullet, Damage, Enemy, Gathering, Health, IFrames, LifeTime, PickupRange, Player,
-        UiLevelDisplayBar, UiLevelDisplayNumber, Velocity,
+        UiLevelDisplayBar, UiLevelDisplayNumber,
     },
     xp_level::XpLevel,
 };
@@ -31,6 +31,7 @@ fn spawn_player(mut cmd: Commands, asset_loader: Res<AssetLoader>) {
 
     cmd.spawn((
         Player,
+        RigidBody::Dynamic,
         Gathering {
             damage: 20.0,
             range: 64.0,
@@ -40,7 +41,7 @@ fn spawn_player(mut cmd: Commands, asset_loader: Res<AssetLoader>) {
         PickupRange(32.),
         Health(1000., 1000.),
         IFrames::default(),
-        Velocity::default(),
+        Velocity::linear(Vec2 { x: 5.0, y: 0.0 }),
         SpriteBundle {
             texture,
             transform: Transform::from_xyz(0., 0., 10.),
@@ -132,7 +133,7 @@ fn move_player(
 
         sprite.flip_x = new_vel.x < 0.0;
 
-        velocity.0 = new_vel.normalize_or_zero() * player_speed;
+        velocity.linvel = new_vel.normalize_or_zero() * player_speed;
     }
 }
 
@@ -165,7 +166,7 @@ fn shoot_bullets(
 
                 cmd.spawn(Bullet)
                     .insert(Damage(5.))
-                    .insert(Velocity(vel.xy()))
+                    .insert(Velocity::linear(vel.truncate()))
                     .insert(LifeTime(420))
                     .insert(RigidBody::Dynamic)
                     .insert(Sensor)

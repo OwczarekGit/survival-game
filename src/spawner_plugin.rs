@@ -4,7 +4,7 @@ use rand::Rng;
 
 use crate::{
     asset_loader_plugin::AssetLoader,
-    components::{Enemy, Health, IFrames, Player, Velocity},
+    components::{Enemy, Health, IFrames, Player},
     utils::random_vector,
 };
 
@@ -119,7 +119,6 @@ fn handle_spawned_entity_death(
             for (mut spawner, spawner_e) in spawner_q.iter_mut() {
                 if spawner_e == e.id() {
                     spawner.alive_now = spawner.alive_now.saturating_sub(1);
-                    dbg!(spawner.alive_now);
                 }
             }
         }
