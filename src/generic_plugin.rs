@@ -7,6 +7,7 @@ use crate::{
         Velocity, Xp,
     },
     events::{SoundEvent, TreeDiedEvent, XpDropEvent},
+    spawner_plugin::{SpawnedEntiyDeathEvent, SpawnerId},
 };
 use bevy::{audio::Volume, prelude::*};
 use bevy_rapier2d::prelude::*;
@@ -147,15 +148,16 @@ fn handle_tree_death(
 // I don't even...
 fn bullet_enemy_collision(
     mut cmd: Commands,
-    mut enemy_q: Query<(&Transform, &mut Health, &mut IFrames, Entity), With<Enemy>>,
+    mut enemy_q: Query<(&Transform, &mut Health, &mut IFrames, &SpawnerId, Entity), With<Enemy>>,
     bullet_q: Query<(&Damage, Entity), (With<Bullet>, Without<Enemy>)>,
     mut collision_events: EventReader<CollisionEvent>,
     mut sound_event: EventWriter<SoundEvent>,
     mut xp_event: EventWriter<XpDropEvent>,
+    mut entity_death_event: EventWriter<SpawnedEntiyDeathEvent>,
 ) {
     for collision_event in collision_events.read() {
         if let CollisionEvent::Started(a, b, _f) = collision_event {
-            for (transform, mut hp, mut iframes, entity) in enemy_q.iter_mut() {
+            for (transform, mut hp, mut iframes, sid, entity) in enemy_q.iter_mut() {
                 if a == &entity {
                     for (dmg, bullet_e) in bullet_q.iter() {
                         if &bullet_e == b {
@@ -165,6 +167,7 @@ fn bullet_enemy_collision(
 
                             if hp.0 <= 0.0 {
                                 cmd.entity(entity).despawn();
+                                entity_death_event.send(SpawnedEntiyDeathEvent(sid.0));
                                 sound_event.send(SoundEvent::Death);
                                 xp_event.send(XpDropEvent(transform.translation, 10.));
                             } else {
@@ -181,6 +184,7 @@ fn bullet_enemy_collision(
 
                             if hp.0 <= 0.0 {
                                 cmd.entity(entity).despawn();
+                                entity_death_event.send(SpawnedEntiyDeathEvent(sid.0));
                                 sound_event.send(SoundEvent::Death);
                                 xp_event.send(XpDropEvent(transform.translation, 10.));
                             } else {

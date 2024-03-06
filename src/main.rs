@@ -8,6 +8,7 @@ use enemy_plugin::EnemyPlugin;
 use generic_plugin::GenericPlugin;
 use pickup_plugin::PickupPlugin;
 use player_plugin::PlayerPlugin;
+use spawner_plugin::SpawnerPlugin;
 use tree_plugin::TreePlugin;
 use xp_plugin::XpPlugin;
 
@@ -19,7 +20,9 @@ mod events;
 mod generic_plugin;
 mod pickup_plugin;
 mod player_plugin;
+mod spawner_plugin;
 mod tree_plugin;
+mod utils;
 mod xp_level;
 mod xp_plugin;
 
@@ -37,6 +40,7 @@ fn main() {
         .add_plugins(XpPlugin)
         .add_plugins(TreePlugin)
         .add_plugins(PickupPlugin)
+        .add_plugins(SpawnerPlugin)
         .insert_resource(RapierConfiguration {
             gravity: Vec2::ZERO,
             ..default()
