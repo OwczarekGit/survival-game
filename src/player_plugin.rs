@@ -41,7 +41,7 @@ fn spawn_player(mut cmd: Commands, asset_loader: Res<AssetLoader>) {
         PickupRange(32.),
         Health(1000., 1000.),
         IFrames::default(),
-        Velocity::linear(Vec2 { x: 5.0, y: 0.0 }),
+        Velocity::linear(Vec2 { x: 0.0, y: 0.0 }),
         SpriteBundle {
             texture,
             transform: Transform::from_xyz(0., 0., 10.),
@@ -51,6 +51,7 @@ fn spawn_player(mut cmd: Commands, asset_loader: Res<AssetLoader>) {
             },
             ..Default::default()
         },
+        Name::new("Player"),
     ));
 
     cmd.spawn(NodeBundle {
