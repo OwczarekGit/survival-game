@@ -11,7 +11,7 @@ pub struct AggressiveAiPlugin;
 
 impl Plugin for AggressiveAiPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, ai_tick);
+        app.add_systems(Update, update_ai);
         app.register_type::<AggressiveAi>();
         app.register_type::<AggressiveAiState>();
     }
@@ -35,32 +35,32 @@ impl AggressiveAi {
 #[derive(Debug, Component, Reflect)]
 pub enum AggressiveAiState {
     ImmediateWander,
+    CheckLocation(Vec2),
     Attack,
     Stand,
     Wander(Vec2),
 }
 
-fn ai_tick(
+fn update_ai(
     player_q: Query<&Transform, With<Player>>,
     mut ai_q: Query<(&Transform, &mut Velocity, &mut AggressiveAi), Without<Player>>,
 ) {
     let player = player_q.single();
     ai_q.iter_mut()
-        .for_each(|(t, mut v, mut a)| process_ai_frame((t, &mut v, &mut a), player));
+        .for_each(|(t, mut v, mut a)| ai_tick((t, &mut v, &mut a), player));
 }
 
-fn process_ai_frame(
-    (ai_t, ai_v, ai_a): (&Transform, &mut Velocity, &mut AggressiveAi),
-    p_t: &Transform,
-) {
+fn ai_tick((ai_t, ai_v, ai_a): (&Transform, &mut Velocity, &mut AggressiveAi), p_t: &Transform) {
     let mut rng = rand::thread_rng();
     let distance_to_player = p_t.translation.distance(ai_t.translation);
+
+    const ATTACK_SPEED: f32 = 80.0;
+
     match ai_a.state {
         AggressiveAiState::Attack => {
             if distance_to_player > ai_a.view_range * 1.5 {
                 ai_a.state = AggressiveAiState::Stand;
             } else {
-                const ATTACK_SPEED: f32 = 80.0;
                 let vector = (p_t.translation - ai_t.translation)
                     .truncate()
                     .normalize_or_zero()
@@ -81,6 +81,10 @@ fn process_ai_frame(
             }
         }
         AggressiveAiState::Wander(point) => {
+            if distance_to_player < ai_a.view_range {
+                ai_a.state = AggressiveAiState::Attack;
+            }
+
             const WANDER_SPEED: f32 = 20.0;
             let vector = (point - ai_t.translation.truncate()).normalize_or_zero() * WANDER_SPEED;
             ai_v.linvel.x = vector.x;
@@ -97,6 +101,19 @@ fn process_ai_frame(
             point.y += ai_t.translation.y;
 
             ai_a.state = AggressiveAiState::Wander(point);
+        }
+        AggressiveAiState::CheckLocation(point) => {
+            if distance_to_player < ai_a.view_range {
+                ai_a.state = AggressiveAiState::Attack;
+            }
+            let vector = (point - ai_t.translation.truncate()).normalize_or_zero() * ATTACK_SPEED;
+            ai_v.linvel.x = vector.x;
+            ai_v.linvel.y = vector.y;
+
+            if ai_t.translation.truncate().distance(point) < 4.0 {
+                ai_v.linvel = Vec2::ZERO;
+                ai_a.state = AggressiveAiState::Stand;
+            }
         }
     }
 }

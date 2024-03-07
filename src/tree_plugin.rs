@@ -3,7 +3,7 @@ use rand::Rng;
 
 use crate::{
     asset_loader_plugin::AssetLoader,
-    camera_plugin::{MouseHighlightedAction, MouseScreenPostion},
+    camera_plugin::{MouseHighlightedAction, MousePosition},
     components::{Gathering, Health, IFrames, MainCamera, Player, Tree, TreeState, TreeTrunk},
     events::{SoundEvent, TreeDiedEvent},
 };
@@ -94,34 +94,31 @@ fn spawn_trees(mut cmd: Commands, asset_loader: Res<AssetLoader>) {
 }
 
 fn select_tree(
-    camera_q: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
     player_q: Query<(&Transform, &Gathering), (With<Player>, Without<MainCamera>)>,
     tree_q: Query<(&GlobalTransform, Entity), (With<Tree>, Without<Player>, Without<MainCamera>)>,
-    mouse: Res<MouseScreenPostion>,
+    mouse: Res<MousePosition>,
     mut mouse_action: ResMut<MouseHighlightedAction>,
 ) {
-    let (cam, cam_transform) = camera_q.single();
     if let Ok((p_transform, p_range)) = player_q.get_single() {
-        if let Some(cursor_world) = cam.viewport_to_world_2d(cam_transform, mouse.0) {
-            let mut closest_dist = f32::MAX;
-            let mut closest_tree = None;
+        let cursor_world = mouse.world_position;
+        let mut closest_dist = f32::MAX;
+        let mut closest_tree = None;
 
-            for (tree, e) in tree_q.iter() {
-                let dist = tree.translation().distance(cursor_world.extend(0.0));
-                if dist < closest_dist && dist < 32.0 {
-                    closest_dist = dist;
-                    closest_tree = Some((tree, e));
-                }
+        for (tree, e) in tree_q.iter() {
+            let dist = tree.translation().distance(cursor_world.extend(0.0));
+            if dist < closest_dist && dist < 32.0 {
+                closest_dist = dist;
+                closest_tree = Some((tree, e));
             }
+        }
 
-            if let Some((tree, e)) = closest_tree {
-                let dist_form_player = p_transform.translation.distance(tree.translation());
-                if dist_form_player <= p_range.range {
-                    mouse_action.0 = Some(e);
-                }
-            } else {
-                mouse_action.0 = None;
+        if let Some((tree, e)) = closest_tree {
+            let dist_form_player = p_transform.translation.distance(tree.translation());
+            if dist_form_player <= p_range.range {
+                mouse_action.0 = Some(e);
             }
+        } else {
+            mouse_action.0 = None;
         }
     }
 }

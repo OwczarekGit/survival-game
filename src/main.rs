@@ -14,6 +14,7 @@ use xp_plugin::XpPlugin;
 
 mod aggressive_ai_plugin;
 mod asset_loader_plugin;
+mod bullet;
 mod camera_plugin;
 mod components;
 mod events;

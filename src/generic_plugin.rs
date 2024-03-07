@@ -1,7 +1,9 @@
 use std::ops::Sub;
 
 use crate::{
+    aggressive_ai_plugin::{AggressiveAi, AggressiveAiState},
     asset_loader_plugin::AssetLoader,
+    bullet::OriginPosition,
     components::{
         AttractedToPlayer, Bullet, Damage, Enemy, Gathering, Health, IFrames, LifeTime,
         PickupRange, PickupType, Player, PlayerPickup, TreeState, Xp,
@@ -147,8 +149,18 @@ fn handle_tree_death(
 // I don't even...
 fn bullet_enemy_collision(
     mut cmd: Commands,
-    mut enemy_q: Query<(&Transform, &mut Health, &mut IFrames, &SpawnerId, Entity), With<Enemy>>,
-    bullet_q: Query<(&Damage, Entity), (With<Bullet>, Without<Enemy>)>,
+    mut enemy_q: Query<
+        (
+            &Transform,
+            &mut Health,
+            &mut IFrames,
+            &SpawnerId,
+            &mut AggressiveAi,
+            Entity,
+        ),
+        With<Enemy>,
+    >,
+    bullet_q: Query<(&Damage, &OriginPosition, Entity), (With<Bullet>, Without<Enemy>)>,
     mut collision_events: EventReader<CollisionEvent>,
     mut sound_event: EventWriter<SoundEvent>,
     mut xp_event: EventWriter<XpDropEvent>,
@@ -156,13 +168,14 @@ fn bullet_enemy_collision(
 ) {
     for collision_event in collision_events.read() {
         if let CollisionEvent::Started(a, b, _f) = collision_event {
-            for (transform, mut hp, mut iframes, sid, entity) in enemy_q.iter_mut() {
+            for (transform, mut hp, mut iframes, sid, mut ai, entity) in enemy_q.iter_mut() {
                 if a == &entity {
-                    for (dmg, bullet_e) in bullet_q.iter() {
+                    for (dmg, o, bullet_e) in bullet_q.iter() {
                         if &bullet_e == b {
                             hp.0 = hp.0.sub(dmg.0);
                             iframes.0 = 0.2;
                             cmd.entity(bullet_e).despawn();
+                            ai.state = AggressiveAiState::CheckLocation(o.0);
 
                             if hp.0 <= 0.0 {
                                 cmd.entity(entity).despawn();
@@ -175,11 +188,12 @@ fn bullet_enemy_collision(
                         }
                     }
                 } else if b == &entity {
-                    for (dmg, bullet_e) in bullet_q.iter() {
+                    for (dmg, o, bullet_e) in bullet_q.iter() {
                         if &bullet_e == a {
                             hp.0 = hp.0.sub(dmg.0);
                             iframes.0 = 0.2;
                             cmd.entity(bullet_e).despawn();
+                            ai.state = AggressiveAiState::CheckLocation(o.0);
 
                             if hp.0 <= 0.0 {
                                 cmd.entity(entity).despawn();

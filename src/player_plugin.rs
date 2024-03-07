@@ -3,9 +3,10 @@ use bevy_rapier2d::prelude::*;
 
 use crate::{
     asset_loader_plugin::AssetLoader,
-    camera_plugin::MouseScreenPostion,
+    bullet::fire_bullet,
+    camera_plugin::MousePosition,
     components::{
-        Bullet, Damage, Gathering, Health, IFrames, LifeTime, MainCamera, PickupRange, Player,
+        Damage, Gathering, Health, IFrames, LifeTime, MainCamera, PickupRange, Player,
         UiLevelDisplayBar, UiLevelDisplayNumber,
     },
     events::SoundEvent,
@@ -140,47 +141,29 @@ fn move_player(
 
 fn shoot_bullets(
     mut cmd: Commands,
-    camera_q: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
     player_q: Query<&Transform, (With<Player>, Without<MainCamera>)>,
     mut attack_timer: ResMut<PlayerAttackTimer>,
     time: Res<Time>,
     asset_loader: Res<AssetLoader>,
     keys: Res<ButtonInput<MouseButton>>,
-    mouse: Res<MouseScreenPostion>,
+    mouse: Res<MousePosition>,
     mut sound_events: EventWriter<SoundEvent>,
 ) {
     attack_timer.0.tick(time.delta());
     if let Ok(player) = player_q.get_single() {
-        let camera = camera_q.single();
         if attack_timer.0.finished() && keys.pressed(MouseButton::Left) {
-            let cursor_world = camera
-                .0
-                .viewport_to_world_2d(camera.1, mouse.0)
-                .unwrap_or(Vec2::ZERO);
-            const BULLET_SPEED: f32 = 30_000.0;
-            let dt = time.delta_seconds();
-            let vel = (cursor_world - player.translation.truncate()).normalize_or_zero()
-                * dt
-                * BULLET_SPEED;
+            const BULLET_SPEED: f32 = 1_000.0;
 
-            cmd.spawn(Bullet)
-                .insert(Damage(5.))
-                .insert(Velocity::linear(vel))
-                .insert(LifeTime(200))
-                .insert(RigidBody::Dynamic)
-                .insert(Sensor)
-                .insert(Collider::ball(2.))
-                .insert(ActiveEvents::COLLISION_EVENTS)
-                .insert(SpriteBundle {
-                    transform: Transform::from_translation(player.translation),
-                    texture: asset_loader.bullet_sprite.clone(),
-                    sprite: Sprite {
-                        custom_size: Some(Vec2::new(8., 8.)),
-                        ..default()
-                    },
-                    ..Default::default()
-                })
-                .insert(Name::new("Bullet"));
+            fire_bullet(
+                &mut cmd,
+                20.0,
+                player.translation,
+                mouse.world_position.extend(player.translation.z),
+                Damage(2.0),
+                LifeTime(120),
+                asset_loader.bullet_sprite.clone(),
+                BULLET_SPEED,
+            );
 
             sound_events.send(SoundEvent::PistolShoot);
             attack_timer.0.reset();

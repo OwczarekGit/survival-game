@@ -3,7 +3,10 @@ use bevy::{prelude::*, window::PrimaryWindow};
 use crate::components::{MainCamera, Player};
 
 #[derive(Debug, Clone, Default, Resource)]
-pub struct MouseScreenPostion(pub Vec2);
+pub struct MousePosition {
+    pub screen_position: Vec2,
+    pub world_position: Vec2,
+}
 
 #[derive(Debug, Clone, Default, Resource)]
 pub struct MouseHighlightedAction(pub Option<Entity>);
@@ -14,7 +17,7 @@ impl Plugin for CameraPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, create_camera);
         app.add_systems(Update, (follow_player, update_mouse_screen_pos));
-        app.init_resource::<MouseScreenPostion>();
+        app.init_resource::<MousePosition>();
         app.init_resource::<MouseHighlightedAction>();
     }
 }
@@ -46,9 +49,18 @@ fn follow_player(
 
 fn update_mouse_screen_pos(
     window_q: Query<&Window, With<PrimaryWindow>>,
-    mut mouse: ResMut<MouseScreenPostion>,
+    camera_q: Query<(&Camera, &GlobalTransform), (With<MainCamera>, Without<PrimaryWindow>)>,
+    mut mouse: ResMut<MousePosition>,
 ) {
     if let Ok(win) = window_q.get_single() {
-        mouse.0 = win.cursor_position().unwrap_or(Vec2::ZERO);
+        let cam = camera_q.single();
+        mouse.screen_position = win.cursor_position().unwrap_or(Vec2::ZERO);
+
+        let cursor_world = cam
+            .0
+            .viewport_to_world_2d(cam.1, mouse.screen_position)
+            .unwrap_or_default();
+
+        mouse.world_position = cursor_world;
     }
 }
