@@ -8,13 +8,12 @@ use crate::{
         AttractedToPlayer, Bullet, Damage, Enemy, Gathering, Health, IFrames, LifeTime,
         PickupRange, PickupType, Player, PlayerPickup, TreeState, Xp,
     },
-    events::{SoundEvent, TreeDiedEvent, XpDropEvent},
+    events::{ItemDropEvent, SoundEvent, TreeDiedEvent, XpDropEvent},
     spawner_plugin::{SpawnedEntiyDeathEvent, SpawnerId},
-    utils::{random_mag_from_range, random_vector},
+    utils::{random_in_range, random_vector},
 };
 use bevy::{audio::Volume, prelude::*};
 use bevy_rapier2d::prelude::*;
-use rand::Rng;
 
 pub struct GenericPlugin;
 
@@ -22,6 +21,7 @@ impl Plugin for GenericPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<SoundEvent>();
         app.add_event::<TreeDiedEvent>();
+        app.add_event::<ItemDropEvent>();
         app.add_systems(
             Update,
             (
@@ -32,6 +32,7 @@ impl Plugin for GenericPlugin {
                 tick_gathering,
                 handle_tree_death,
                 attract_all_xp,
+                handle_item_drop_event,
             ),
         );
         app.register_type::<PlayerPickup>();
@@ -44,6 +45,37 @@ impl Plugin for GenericPlugin {
         app.register_type::<Gathering>();
         app.register_type::<PickupType>();
     }
+}
+
+fn handle_item_drop_event(
+    mut cmd: Commands,
+    mut drop_events: EventReader<ItemDropEvent>,
+    assets: Res<AssetLoader>,
+) {
+    for ev in drop_events.read() {
+        match ev {
+            ItemDropEvent::Wood(count, point) => {
+                for _ in 1..=*count as i32 {
+                    let mut point = *point;
+                    point.y -= 50.0;
+                    cmd.spawn((
+                        PlayerPickup(PickupType::Item),
+                        RigidBody::Dynamic,
+                        Restitution::coefficient(5.0),
+                        Velocity::linear(random_vector().truncate() * random_in_range(-5.0, 5.0)),
+                        SpriteBundle {
+                            texture: assets.item_wood_sprite.clone(),
+                            transform: Transform::from_translation(
+                                point.extend(20.0) + random_vector() * random_in_range(-5.0, 5.0),
+                            ),
+                            ..default()
+                        },
+                    ));
+                }
+            }
+        }
+    }
+    drop_events.clear();
 }
 
 fn attract_all_xp(
@@ -119,13 +151,12 @@ fn handle_tree_death(
     mut sound_events: EventWriter<SoundEvent>,
     asset_loader: Res<AssetLoader>,
 ) {
-    let mut rng = rand::thread_rng();
-
     for TreeDiedEvent(e, pos, xp) in tree_death_ev.read() {
-        let range = rng.gen_range(1..=5);
-        for _i in 0..range {
+        let range = random_in_range(1.0, 5.0);
+        for _i in 0..range as u32 {
             let mut vector = random_vector();
-            vector *= random_mag_from_range(-15.0, 15.0);
+            vector *= random_in_range(-15.0, 15.0);
+
             cmd.spawn(Xp(*xp))
                 .insert(SpriteBundle {
                     transform: Transform::from_translation(*pos),

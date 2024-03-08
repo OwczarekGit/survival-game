@@ -5,7 +5,8 @@ use crate::{
     asset_loader_plugin::AssetLoader,
     camera_plugin::{MouseHighlightedAction, MousePosition},
     components::{Gathering, Health, IFrames, MainCamera, Player, Tree, TreeState, TreeTrunk},
-    events::{SoundEvent, TreeDiedEvent},
+    events::{ItemDropEvent, SoundEvent, TreeDiedEvent},
+    utils::chance_one_in,
 };
 
 pub struct TreePlugin;
@@ -125,13 +126,14 @@ fn select_tree(
 
 fn cut_tree(
     mut player_q: Query<&mut Gathering, (With<Player>, Without<Tree>)>,
-    mut tree_q: Query<(&mut Transform, &mut IFrames, &mut Health, Entity), With<Tree>>,
+    mut tree_q: Query<(&mut GlobalTransform, &mut IFrames, &mut Health, Entity), With<Tree>>,
     mut mouse_action: ResMut<MouseHighlightedAction>,
     mouse_buttons: Res<ButtonInput<MouseButton>>,
     mut sound_event: EventWriter<SoundEvent>,
+    mut drop_event: EventWriter<ItemDropEvent>,
 ) {
     if mouse_buttons.pressed(MouseButton::Right) && mouse_action.0.is_some() {
-        for (_t, mut iframes, mut hp, e) in tree_q.iter_mut() {
+        for (t, mut iframes, mut hp, e) in tree_q.iter_mut() {
             let mut player = player_q.single_mut();
             if mouse_action.0.is_some()
                 && mouse_action.0.unwrap() == e
@@ -143,6 +145,10 @@ fn cut_tree(
                 hp.0 -= player.damage;
                 sound_event.send(SoundEvent::AttackTree);
                 mouse_action.0 = None;
+
+                if chance_one_in(10.0) {
+                    drop_event.send(ItemDropEvent::Wood(1, t.translation().truncate()));
+                }
             }
         }
     }

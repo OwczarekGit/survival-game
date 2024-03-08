@@ -12,6 +12,11 @@ pub enum SoundEvent {
     PistolShoot,
 }
 
+#[derive(Debug, Clone, Event)]
+pub enum ItemDropEvent {
+    Wood(u32, Vec2),
+}
+
 #[derive(Debug, Event)]
 pub struct TreeDiedEvent(pub Entity, pub Vec3, pub f32);
 

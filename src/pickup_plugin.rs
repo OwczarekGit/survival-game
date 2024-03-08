@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_rapier2d::dynamics::Velocity;
 use rand::Rng;
 
 use crate::{
@@ -14,6 +15,7 @@ impl Plugin for PickupPlugin {
         app.add_event::<PickupTakenEvent>();
         app.add_systems(Update, (spawn_magnets, take_player_pickups));
         app.add_systems(Update, handle_pickup_taken);
+        app.add_systems(Update, attract_pickups);
     }
 }
 
@@ -71,10 +73,31 @@ fn handle_pickup_taken(
                     cmd.entity(xp).insert(AttractedToPlayer);
                 }
             }
+            PickupType::Item => {}
         }
         if let Some(mut e) = cmd.get_entity(*e) {
             e.despawn();
         }
     }
     events.clear();
+}
+
+fn attract_pickups(
+    player_q: Query<(&Transform, &PickupRange), With<Player>>,
+    mut xp_q: Query<(&mut Velocity, &Transform), (With<PlayerPickup>, Without<Player>)>,
+    time: Res<Time>,
+) {
+    if let Ok((player, range)) = player_q.get_single() {
+        let attract_speed = 500.0;
+        let dt = time.delta_seconds();
+        for (mut v, t) in xp_q.iter_mut() {
+            let dist = player.translation.distance(t.translation);
+            if dist <= (range.0 * 2.0) {
+                let vector =
+                    ((player.translation - t.translation).normalize_or_zero() * dt * attract_speed)
+                        * dist;
+                v.linvel = vector.xy();
+            }
+        }
+    }
 }

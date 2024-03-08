@@ -71,4 +71,5 @@ pub struct Gathering {
 #[derive(Debug, Clone, Copy, Component, Reflect)]
 pub enum PickupType {
     Magnet,
+    Item,
 }

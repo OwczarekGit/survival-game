@@ -1,10 +1,9 @@
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
-use rand::Rng;
 
 use crate::{
     components::Player,
-    utils::{random_mag_from_range, random_vector},
+    utils::{chance_one_in, random_in_range, random_vector},
 };
 
 pub struct AggressiveAiPlugin;
@@ -51,7 +50,6 @@ fn update_ai(
 }
 
 fn ai_tick((ai_t, ai_v, ai_a): (&Transform, &mut Velocity, &mut AggressiveAi), p_t: &Transform) {
-    let mut rng = rand::thread_rng();
     let distance_to_player = p_t.translation.distance(ai_t.translation);
 
     const ATTACK_SPEED: f32 = 80.0;
@@ -72,8 +70,8 @@ fn ai_tick((ai_t, ai_v, ai_a): (&Transform, &mut Velocity, &mut AggressiveAi), p
         AggressiveAiState::Stand => {
             if distance_to_player < ai_a.view_range {
                 ai_a.state = AggressiveAiState::Attack;
-            } else if rng.gen_bool(1.0 / 1000.0) {
-                let mut point = random_vector().truncate() * random_mag_from_range(50.0, 300.0);
+            } else if chance_one_in(1000.0) {
+                let mut point = random_vector().truncate() * random_in_range(50.0, 300.0);
                 point.x += ai_t.translation.x;
                 point.y += ai_t.translation.y;
 
@@ -96,7 +94,7 @@ fn ai_tick((ai_t, ai_v, ai_a): (&Transform, &mut Velocity, &mut AggressiveAi), p
             }
         }
         AggressiveAiState::ImmediateWander => {
-            let mut point = random_vector().truncate() * random_mag_from_range(50.0, 300.0);
+            let mut point = random_vector().truncate() * random_in_range(50.0, 300.0);
             point.x += ai_t.translation.x;
             point.y += ai_t.translation.y;
 

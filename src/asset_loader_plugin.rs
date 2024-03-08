@@ -20,6 +20,9 @@ pub struct AssetLoader {
     pub tree_main_sprite: Handle<Image>,
     pub attack_tree_sound: Handle<AudioSource>,
     pub tree_hit_ground_sound: Handle<AudioSource>,
+
+    // Items
+    pub item_wood_sprite: Handle<Image>,
 }
 
 pub struct AssetLoaderPlugin;
@@ -50,6 +53,9 @@ fn init_assets(mut cmd: Commands, asset_server: Res<AssetServer>) {
     let attack_tree_sound = asset_server.load("attack-tree.ogg");
     let tree_hit_ground_sound = asset_server.load("tree-hit-ground.ogg");
 
+    // Items
+    let item_wood_sprite = asset_server.load("wood.png");
+
     cmd.insert_resource(AssetLoader {
         font,
         enemy_sprite,
@@ -67,5 +73,6 @@ fn init_assets(mut cmd: Commands, asset_server: Res<AssetServer>) {
         tree_main_sprite,
         attack_tree_sound,
         tree_hit_ground_sound,
+        item_wood_sprite,
     });
 }
