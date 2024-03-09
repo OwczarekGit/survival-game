@@ -28,9 +28,6 @@ pub struct Health(pub f32, pub f32);
 pub struct Damage(pub f32);
 
 #[derive(Debug, Clone, Copy, Component, Reflect)]
-pub struct Xp(pub f32);
-
-#[derive(Debug, Clone, Copy, Component, Reflect)]
 pub struct PickupRange(pub f32);
 
 #[derive(Debug, Clone, Default, Component)]
@@ -43,23 +40,10 @@ pub struct IFrames(pub f32);
 pub struct LifeTime(pub u32);
 
 #[derive(Debug, Clone, Copy, Default, Component)]
-pub struct Tree;
-
-#[derive(Debug, Clone, Copy, Default, Component)]
 pub struct AttractedToPlayer;
 
 #[derive(Debug, Clone, Copy, Default, Component)]
-pub struct TreeTrunk;
-
-#[derive(Debug, Clone, Copy, Default, Component)]
 pub struct Magnet;
-
-#[derive(Debug, Clone, Copy, Component, Reflect)]
-pub enum TreeState {
-    Standing,
-    Falling,
-    Dead,
-}
 
 #[derive(Debug, Clone, Copy, Default, Component, Reflect)]
 pub struct Gathering {

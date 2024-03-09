@@ -1,12 +1,17 @@
+pub mod xp_level;
+
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
 use crate::{
     asset_loader_plugin::AssetLoader,
-    components::{PickupRange, Player, UiLevelDisplayBar, UiLevelDisplayNumber, Xp},
+    components::{PickupRange, Player, UiLevelDisplayBar, UiLevelDisplayNumber},
     events::{SoundEvent, XpDropEvent},
-    xp_level::XpLevel,
 };
+use xp_level::XpLevel;
+
+#[derive(Debug, Clone, Copy, Component, Reflect)]
+pub struct Xp(pub f32);
 
 pub struct XpPlugin;
 
@@ -87,4 +92,19 @@ fn update_xp_display(
         lvl.sections[0].value = format!("{}", player.level);
         bar.width = Val::Percent(player.xp / player.xp_to_next * 100.0);
     }
+}
+
+pub fn drop_xp(cmd: &mut Commands, xp: Xp, position: Vec2, velocity: Vec2, texture: Handle<Image>) {
+    cmd.spawn((
+        xp,
+        SpriteBundle {
+            transform: Transform::from_translation(position.extend(10.0)),
+            texture,
+            ..default()
+        },
+        Velocity::linear(velocity),
+        Restitution::coefficient(2.0),
+        RigidBody::Dynamic,
+        Name::new("Xp"),
+    ));
 }

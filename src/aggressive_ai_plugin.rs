@@ -33,6 +33,7 @@ impl AggressiveAi {
 
 #[derive(Debug, Component, Reflect)]
 pub enum AggressiveAiState {
+    KillMode,
     ImmediateWander,
     CheckLocation(Vec2),
     Attack,
@@ -53,8 +54,17 @@ fn ai_tick((ai_t, ai_v, ai_a): (&Transform, &mut Velocity, &mut AggressiveAi), p
     let distance_to_player = p_t.translation.distance(ai_t.translation);
 
     const ATTACK_SPEED: f32 = 80.0;
+    const WANDER_SPEED: f32 = 20.0;
 
     match ai_a.state {
+        AggressiveAiState::KillMode => {
+            let vector = (p_t.translation - ai_t.translation)
+                .truncate()
+                .normalize_or_zero()
+                * ATTACK_SPEED;
+            ai_v.linvel.x = vector.x;
+            ai_v.linvel.y = vector.y;
+        }
         AggressiveAiState::Attack => {
             if distance_to_player > ai_a.view_range * 1.5 {
                 ai_a.state = AggressiveAiState::Stand;
@@ -83,7 +93,6 @@ fn ai_tick((ai_t, ai_v, ai_a): (&Transform, &mut Velocity, &mut AggressiveAi), p
                 ai_a.state = AggressiveAiState::Attack;
             }
 
-            const WANDER_SPEED: f32 = 20.0;
             let vector = (point - ai_t.translation.truncate()).normalize_or_zero() * WANDER_SPEED;
             ai_v.linvel.x = vector.x;
             ai_v.linvel.y = vector.y;

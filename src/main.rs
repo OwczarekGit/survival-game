@@ -24,7 +24,6 @@ mod player_plugin;
 mod spawner_plugin;
 mod tree_plugin;
 mod utils;
-mod xp_level;
 mod xp_plugin;
 
 fn main() {

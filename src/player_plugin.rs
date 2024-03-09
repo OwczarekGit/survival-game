@@ -2,15 +2,16 @@ use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
 use crate::{
+    aggressive_ai_plugin::{AggressiveAi, AggressiveAiState},
     asset_loader_plugin::AssetLoader,
     bullet::fire_bullet,
     camera_plugin::MousePosition,
     components::{
-        Damage, Gathering, Health, IFrames, LifeTime, MainCamera, PickupRange, Player,
+        Damage, Enemy, Gathering, Health, IFrames, LifeTime, MainCamera, PickupRange, Player,
         UiLevelDisplayBar, UiLevelDisplayNumber,
     },
     events::SoundEvent,
-    xp_level::XpLevel,
+    xp_plugin::xp_level::XpLevel,
 };
 
 #[derive(Debug, Resource)]
@@ -24,6 +25,7 @@ impl Plugin for PlayerPlugin {
         app.insert_resource(PlayerAttackTimer(Timer::from_seconds(0.5, TimerMode::Once)));
         app.add_systems(Update, move_player);
         app.add_systems(Update, shoot_bullets);
+        app.add_systems(Update, kill_mode);
     }
 }
 
@@ -167,6 +169,14 @@ fn shoot_bullets(
 
             sound_events.send(SoundEvent::PistolShoot);
             attack_timer.0.reset();
+        }
+    }
+}
+
+fn kill_mode(mut enemy_q: Query<&mut AggressiveAi, With<Enemy>>, keys: Res<ButtonInput<KeyCode>>) {
+    if keys.just_pressed(KeyCode::Backspace) {
+        for mut e in enemy_q.iter_mut() {
+            e.state = AggressiveAiState::KillMode;
         }
     }
 }

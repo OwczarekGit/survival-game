@@ -1,20 +1,46 @@
+use crate::{
+    components::{PickupType, PlayerPickup},
+    xp_plugin::{drop_xp, Xp},
+};
 use bevy::prelude::*;
+use bevy_rapier2d::{
+    dynamics::{RigidBody, Velocity},
+    geometry::Restitution,
+};
 use rand::Rng;
 
 use crate::{
     asset_loader_plugin::AssetLoader,
     camera_plugin::{MouseHighlightedAction, MousePosition},
-    components::{Gathering, Health, IFrames, MainCamera, Player, Tree, TreeState, TreeTrunk},
+    components::{Gathering, Health, IFrames, MainCamera, Player},
     events::{ItemDropEvent, SoundEvent, TreeDiedEvent},
-    utils::chance_one_in,
+    utils::{chance_one_in, random_in_range, random_vector},
 };
+
+#[derive(Debug, Clone, Copy, Default, Component)]
+pub struct TreeTrunk;
+
+#[derive(Debug, Clone, Copy, Component, Reflect)]
+pub enum TreeState {
+    Standing,
+    Falling,
+    Dead,
+}
+
+#[derive(Debug, Clone, Copy, Default, Component)]
+pub struct Tree;
 
 pub struct TreePlugin;
 
 impl Plugin for TreePlugin {
     fn build(&self, app: &mut App) {
+        app.add_event::<TreeDiedEvent>();
+        app.register_type::<TreeState>();
         app.add_systems(Startup, spawn_trees);
-        app.add_systems(Update, (select_tree, cut_tree, update_trees));
+        app.add_systems(
+            Update,
+            (select_tree, cut_tree, update_trees, handle_tree_death),
+        );
     }
 }
 
@@ -151,5 +177,60 @@ fn cut_tree(
                 }
             }
         }
+    }
+}
+
+fn handle_tree_death(
+    mut cmd: Commands,
+    mut tree_death_ev: EventReader<TreeDiedEvent>,
+    mut sound_events: EventWriter<SoundEvent>,
+    asset_loader: Res<AssetLoader>,
+) {
+    for TreeDiedEvent(e, pos, xp) in tree_death_ev.read() {
+        let range = random_in_range(1.0, 5.0);
+        for _i in 0..range as u32 {
+            let mut vector = random_vector();
+            vector *= random_in_range(-15.0, 15.0);
+
+            drop_xp(
+                &mut cmd,
+                Xp(*xp),
+                pos.truncate(),
+                vector.truncate(),
+                asset_loader.xp_sprite.clone(),
+            );
+        }
+
+        drop_wood(
+            &mut cmd,
+            pos.truncate(),
+            random_in_range(0.0, 10.0) as u32,
+            asset_loader.item_wood_sprite.clone(),
+        );
+
+        if let Some(mut e) = cmd.get_entity(*e) {
+            e.despawn();
+        }
+        sound_events.send(SoundEvent::TreeHitGround);
+    }
+    tree_death_ev.clear();
+}
+
+pub fn drop_wood(cmd: &mut Commands, position: Vec2, count: u32, texture: Handle<Image>) {
+    for _ in 0..=count {
+        let vector = random_vector() * random_in_range(-10.0, 10.0);
+
+        cmd.spawn((
+            PlayerPickup(PickupType::Item),
+            RigidBody::Dynamic,
+            Restitution::coefficient(5.0),
+            Velocity::linear(vector.truncate()),
+            SpriteBundle {
+                transform: Transform::from_xyz(position.x, position.y - 50.0, 20.0),
+                texture: texture.clone(),
+                ..default()
+            },
+            Name::new("Wood"),
+        ));
     }
 }

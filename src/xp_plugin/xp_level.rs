@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::components::Xp;
+use super::Xp;
 
 #[derive(Debug, Clone, Default, Component, Reflect)]
 pub struct XpLevel {

@@ -1,10 +1,11 @@
+use crate::xp_plugin::Xp;
 use bevy::prelude::*;
 use bevy_rapier2d::dynamics::Velocity;
 use rand::Rng;
 
 use crate::{
     asset_loader_plugin::AssetLoader,
-    components::{AttractedToPlayer, Magnet, PickupRange, PickupType, Player, PlayerPickup, Xp},
+    components::{AttractedToPlayer, Magnet, PickupRange, PickupType, Player, PlayerPickup},
     events::PickupTakenEvent,
 };
 

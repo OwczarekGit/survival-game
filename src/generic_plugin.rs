@@ -6,11 +6,11 @@ use crate::{
     bullet::OriginPosition,
     components::{
         AttractedToPlayer, Bullet, Damage, Enemy, Gathering, Health, IFrames, LifeTime,
-        PickupRange, PickupType, Player, PlayerPickup, TreeState, Xp,
+        PickupRange, PickupType, Player, PlayerPickup,
     },
-    events::{ItemDropEvent, SoundEvent, TreeDiedEvent, XpDropEvent},
+    events::{ItemDropEvent, SoundEvent, XpDropEvent},
     spawner_plugin::{SpawnedEntiyDeathEvent, SpawnerId},
-    utils::{random_in_range, random_vector},
+    tree_plugin::drop_wood,
 };
 use bevy::{audio::Volume, prelude::*};
 use bevy_rapier2d::prelude::*;
@@ -20,7 +20,6 @@ pub struct GenericPlugin;
 impl Plugin for GenericPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<SoundEvent>();
-        app.add_event::<TreeDiedEvent>();
         app.add_event::<ItemDropEvent>();
         app.add_systems(
             Update,
@@ -30,8 +29,7 @@ impl Plugin for GenericPlugin {
                 bullet_enemy_collision,
                 play_sound_event,
                 tick_gathering,
-                handle_tree_death,
-                attract_all_xp,
+                attract_all_items,
                 handle_item_drop_event,
             ),
         );
@@ -41,7 +39,6 @@ impl Plugin for GenericPlugin {
         app.register_type::<Damage>();
         app.register_type::<IFrames>();
         app.register_type::<LifeTime>();
-        app.register_type::<TreeState>();
         app.register_type::<Gathering>();
         app.register_type::<PickupType>();
     }
@@ -55,30 +52,14 @@ fn handle_item_drop_event(
     for ev in drop_events.read() {
         match ev {
             ItemDropEvent::Wood(count, point) => {
-                for _ in 1..=*count as i32 {
-                    let mut point = *point;
-                    point.y -= 50.0;
-                    cmd.spawn((
-                        PlayerPickup(PickupType::Item),
-                        RigidBody::Dynamic,
-                        Restitution::coefficient(5.0),
-                        Velocity::linear(random_vector().truncate() * random_in_range(-5.0, 5.0)),
-                        SpriteBundle {
-                            texture: assets.item_wood_sprite.clone(),
-                            transform: Transform::from_translation(
-                                point.extend(20.0) + random_vector() * random_in_range(-5.0, 5.0),
-                            ),
-                            ..default()
-                        },
-                    ));
-                }
+                drop_wood(&mut cmd, *point, *count, assets.item_wood_sprite.clone());
             }
         }
     }
     drop_events.clear();
 }
 
-fn attract_all_xp(
+fn attract_all_items(
     player_p: Query<&Transform, With<Player>>,
     mut xp_q: Query<(&Transform, &mut Velocity), (With<AttractedToPlayer>, Without<Player>)>,
 ) {
@@ -143,38 +124,6 @@ fn play_sound_event(
         });
     }
     sound_event.clear();
-}
-
-fn handle_tree_death(
-    mut cmd: Commands,
-    mut tree_death_ev: EventReader<TreeDiedEvent>,
-    mut sound_events: EventWriter<SoundEvent>,
-    asset_loader: Res<AssetLoader>,
-) {
-    for TreeDiedEvent(e, pos, xp) in tree_death_ev.read() {
-        let range = random_in_range(1.0, 5.0);
-        for _i in 0..range as u32 {
-            let mut vector = random_vector();
-            vector *= random_in_range(-15.0, 15.0);
-
-            cmd.spawn(Xp(*xp))
-                .insert(SpriteBundle {
-                    transform: Transform::from_translation(*pos),
-                    texture: asset_loader.xp_sprite.clone(),
-                    ..default()
-                })
-                .insert(Velocity::linear(vector.truncate()))
-                .insert(RigidBody::Dynamic)
-                .insert(Restitution::coefficient(2.0))
-                .insert(Name::new("XP"));
-        }
-
-        if let Some(mut e) = cmd.get_entity(*e) {
-            e.despawn();
-        }
-        sound_events.send(SoundEvent::TreeHitGround);
-    }
-    tree_death_ev.clear();
 }
 
 // I don't even...
