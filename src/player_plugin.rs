@@ -4,13 +4,14 @@ use bevy_rapier2d::prelude::*;
 use crate::{
     aggressive_ai_plugin::{AggressiveAi, AggressiveAiState},
     asset_loader_plugin::AssetLoader,
-    bullet::fire_bullet,
+    bullet_plugin::fire_bullet,
     camera_plugin::MousePosition,
     components::{
         Damage, Enemy, Gathering, Health, IFrames, LifeTime, MainCamera, PickupRange, Player,
         UiLevelDisplayBar, UiLevelDisplayNumber,
     },
     events::SoundEvent,
+    turret_plugin::SpawnTurretEvent,
     xp_plugin::xp_level::XpLevel,
 };
 
@@ -26,6 +27,7 @@ impl Plugin for PlayerPlugin {
         app.add_systems(Update, move_player);
         app.add_systems(Update, shoot_bullets);
         app.add_systems(Update, kill_mode);
+        app.add_systems(Update, build_turret);
     }
 }
 
@@ -178,5 +180,16 @@ fn kill_mode(mut enemy_q: Query<&mut AggressiveAi, With<Enemy>>, keys: Res<Butto
         for mut e in enemy_q.iter_mut() {
             e.state = AggressiveAiState::KillMode;
         }
+    }
+}
+
+fn build_turret(
+    player_q: Query<&Transform, With<Player>>,
+    keys: Res<ButtonInput<KeyCode>>,
+    mut spawn_turret_ev: EventWriter<SpawnTurretEvent>,
+) {
+    if keys.just_pressed(KeyCode::Space) {
+        let p = player_q.single();
+        spawn_turret_ev.send(SpawnTurretEvent(p.translation.truncate()));
     }
 }

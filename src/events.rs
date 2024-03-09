@@ -10,6 +10,7 @@ pub enum SoundEvent {
     AttackTree,
     TreeHitGround,
     PistolShoot,
+    MachineGunShoot,
 }
 
 #[derive(Debug, Clone, Event)]

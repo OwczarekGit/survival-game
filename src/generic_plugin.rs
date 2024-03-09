@@ -3,7 +3,7 @@ use std::ops::Sub;
 use crate::{
     aggressive_ai_plugin::{AggressiveAi, AggressiveAiState},
     asset_loader_plugin::AssetLoader,
-    bullet::OriginPosition,
+    bullet_plugin::OriginPosition,
     components::{
         AttractedToPlayer, Bullet, Damage, Enemy, Gathering, Health, IFrames, LifeTime,
         PickupRange, PickupType, Player, PlayerPickup,
@@ -112,6 +112,7 @@ fn play_sound_event(
             SoundEvent::AttackTree => (asset_loader.attack_tree_sound.clone(), 0.5),
             SoundEvent::TreeHitGround => (asset_loader.tree_hit_ground_sound.clone(), 0.7),
             SoundEvent::PistolShoot => (asset_loader.pistol_shoot_sound.clone(), 0.5),
+            SoundEvent::MachineGunShoot => (asset_loader.machine_gun_shoot_sound.clone(), 0.2),
         };
 
         cmd.spawn(AudioBundle {
@@ -155,7 +156,10 @@ fn bullet_enemy_collision(
                             hp.0 = hp.0.sub(dmg.0);
                             iframes.0 = 0.2;
                             cmd.entity(bullet_e).despawn();
-                            ai.state = AggressiveAiState::CheckLocation(o.0);
+
+                            if ai.state != AggressiveAiState::KillMode {
+                                ai.state = AggressiveAiState::CheckLocation(o.0);
+                            }
 
                             if hp.0 <= 0.0 {
                                 cmd.entity(entity).despawn();
@@ -173,7 +177,10 @@ fn bullet_enemy_collision(
                             hp.0 = hp.0.sub(dmg.0);
                             iframes.0 = 0.2;
                             cmd.entity(bullet_e).despawn();
-                            ai.state = AggressiveAiState::CheckLocation(o.0);
+
+                            if ai.state != AggressiveAiState::KillMode {
+                                ai.state = AggressiveAiState::CheckLocation(o.0);
+                            }
 
                             if hp.0 <= 0.0 {
                                 cmd.entity(entity).despawn();

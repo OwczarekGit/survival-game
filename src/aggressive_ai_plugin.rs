@@ -31,7 +31,7 @@ impl AggressiveAi {
     }
 }
 
-#[derive(Debug, Component, Reflect)]
+#[derive(Debug, Component, Reflect, PartialEq)]
 pub enum AggressiveAiState {
     KillMode,
     ImmediateWander,

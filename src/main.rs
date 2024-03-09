@@ -4,17 +4,19 @@ use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_rapier2d::prelude::*;
 
 use asset_loader_plugin::AssetLoaderPlugin;
+use bullet_plugin::BulletPlugin;
 use camera_plugin::CameraPlugin;
 use generic_plugin::GenericPlugin;
 use pickup_plugin::PickupPlugin;
 use player_plugin::PlayerPlugin;
 use spawner_plugin::SpawnerPlugin;
 use tree_plugin::TreePlugin;
+use turret_plugin::TurretPlugin;
 use xp_plugin::XpPlugin;
 
 mod aggressive_ai_plugin;
 mod asset_loader_plugin;
-mod bullet;
+mod bullet_plugin;
 mod camera_plugin;
 mod components;
 mod events;
@@ -23,7 +25,9 @@ mod pickup_plugin;
 mod player_plugin;
 mod spawner_plugin;
 mod tree_plugin;
+mod turret_plugin;
 mod utils;
+mod weapon;
 mod xp_plugin;
 
 fn main() {
@@ -41,6 +45,8 @@ fn main() {
         .add_plugins(PickupPlugin)
         .add_plugins(SpawnerPlugin)
         .add_plugins(AggressiveAiPlugin)
+        .add_plugins(TurretPlugin)
+        .add_plugins(BulletPlugin)
         .insert_resource(ClearColor(Color::rgb_u8(33, 70, 33)))
         .insert_resource(RapierConfiguration {
             gravity: Vec2::ZERO,
